@@ -18,3 +18,7 @@ add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCES}
         ${PROJECT_HEADERS}
 )
+
+include_directories(
+        third_party/eigen
+)
