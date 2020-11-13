@@ -108,9 +108,9 @@ discrete_network_embedding(MatrixXd const &A,
   return make_tuple(beforeB, beforeW, B, W);
 }
 
-size_t h_dis(vector<size_t> const &a, vector<size_t> const &b){
+double h_dis(vector<size_t> const &a, vector<size_t> const &b){
   assert(a.size() == b.size());
-  size_t result = 0;
+  double result = 0;
   for(size_t i = 0; i < a.size(); ++i){
     if(a[i] != b[i]){
       ++result;
@@ -130,7 +130,7 @@ int main(){
   N = num_vertices(g);
   L = 15;
   C = 2;
-  M = 50;
+  M = 100;
 
   Eigen::SparseMatrix<double> SparseA(N, N);
 

@@ -66,6 +66,10 @@ TEST_F(Unit, max_index){
   EXPECT_EQ(i, 1);
 }
 
+TEST_F(Unit, random){
+  auto m = MatrixXd::Random(2, 3);
+  cout << m << endl;
+}
 
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
