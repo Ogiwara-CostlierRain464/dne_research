@@ -11,7 +11,6 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-using namespace boost;
 
 struct VertexProperty{
   int id;
@@ -21,34 +20,9 @@ struct VertexProperty{
   }
 };
 
-typedef boost::adjacency_list<listS, vecS, undirectedS, VertexProperty> UGraph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, VertexProperty> UGraph;
 
-UGraph get_graph(const std::string & file_name){
-  UGraph g;
-  std::ifstream infile(file_name);
-
-  if(!infile){
-    exit(-1);
-  }
-
-  std::string line;
-  int e1;
-  int e2;
-
-  while(std::getline(infile, line)){
-    std::istringstream iss(line);
-
-    if(iss >> e1 >> e2){
-      auto v1 = add_vertex(VertexProperty{e1}, g);
-      auto v2 = add_vertex(VertexProperty{e2}, g);
-      add_edge(v1, v2, g);
-    }
-  }
-
-  return g;
-}
-
-UGraph from_file(const std::string & file_name){
+static UGraph from_file(const std::string & file_name){
   std::ifstream infile(file_name);
 
   if(!infile){
@@ -73,6 +47,7 @@ UGraph from_file(const std::string & file_name){
   UGraph g(edges.begin(), edges.end(), 34);
   return g;
 }
+
 
 
 
