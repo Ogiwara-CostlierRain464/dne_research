@@ -14,9 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS src/*.h)
 
-find_package(Boost 1.40
-    COMPONENTS graph REQUIRED
-)
+find_package(Boost 1.40)
 
 
 add_executable(${PROJECT_NAME}

@@ -99,10 +99,10 @@ discrete_network_embedding(MatrixXd const &A,
   for(size_t _ = 1; _ <= 20; ++_){
     for(size_t i = 1; i <= 9; ++i){
       B = eq11(B, S, W, T);
-      cout << "updating B " << loss(B, S, W, T) << endl;
+      // cout << "updating B " << loss(B, S, W, T) << endl;
     }
     W = eq13(B, T);
-    cout << "updating W " << loss(B, S, W, T) << endl;
+    // cout << "updating W " << loss(B, S, W, T) << endl;
   }
 
   return make_tuple(beforeB, beforeW, B, W);
