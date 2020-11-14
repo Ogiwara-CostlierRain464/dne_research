@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
 include_directories(
         ${Boost_INCLUDE_DIR}
         third_party/eigen
+        third_party/json/include
 )
 
 target_link_libraries(
@@ -32,6 +33,8 @@ target_link_libraries(
         LINK_PUBLIC
         ${Boost_LIBRARIES}
 )
+
+add_subdirectory(third_party/json)
 
 enable_testing()
 
