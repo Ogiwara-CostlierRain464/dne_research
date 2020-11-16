@@ -128,4 +128,9 @@ TEST(JSON, write){
   std::ofstream o("p.json");
   o << j;
 
+  // https://www.aminer.org/citation
+  // https://academic.microsoft.com/topics/77088390,75949130?fullPath=false
+  // https://nlohmann.github.io/json/api/basic_json/get_ref/
+
+
 }
