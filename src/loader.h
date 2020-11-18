@@ -48,14 +48,6 @@ static UGraph from_file(const std::string & file_name){
   return g;
 }
 
-struct Node_{
-  size_t id;
-  size_t class_;
-} Node[10000];
-
-void json_loader(){
-
-}
 
 
 
