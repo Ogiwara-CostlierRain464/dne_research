@@ -19,21 +19,31 @@ TEST(JSON, load){
   bool read_id_flag = false;
   bool read_ref_flag = false;
   bool read_keyword_flag = false;
+  bool f_name_flag = false;
 
 
   std::vector<uint> ids;
   std::vector<uint> refs;
 
+  std::ofstream field("field.txt");
 
   auto x = [&](int depth, json::parse_event_t event, json& parsed){
 
-    if(1 + 1 == 2){
-
+    if(event == json::parse_event_t::array_start){
+      if(read_keyword_flag or read_ref_flag or f_name_flag){
+        return true;
+      }
+    }
+    if(event == json::parse_event_t::object_start){
+      if(read_keyword_flag or read_ref_flag or f_name_flag){
+        return true;
+      }
     }
 
-    if(event == json::parse_event_t::array_start){
-      if(read_keyword_flag or read_ref_flag){
-        return true;
+    if(event == json::parse_event_t::array_end){
+      if(f_name_flag){
+        f_name_flag = false;
+        return false;
       }
     }
 
@@ -56,11 +66,16 @@ TEST(JSON, load){
         read_keyword_flag = false;
         return true;
       }
+      if(f_name_flag and parsed.type() == json::value_t::string){
+        auto name = parsed.get_ref<string&>();
+        field << name << endl;
+        return true;
+      }
     }
 
     if(event == json::parse_event_t::key){
       auto r = parsed.get_ref<string&>();
-      cout << r << endl;
+//      cout << r << endl;
       if(depth == 2){
         if(r == "id"){
           read_id_flag = true;
@@ -77,7 +92,8 @@ TEST(JSON, load){
         read_keyword_flag = true;
         return true;
       }
-      if(r == "fos.name"){
+      if(r == "fos"){
+        f_name_flag = true;
         return true;
       }
     }
