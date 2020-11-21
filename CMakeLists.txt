@@ -75,7 +75,7 @@ file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 file(GLOB_RECURSE TEST_HEADERS test/*.h)
 
 # main.cppのみ外す
-list(REMOVE_ITEM PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/old.cpp)
+list(REMOVE_ITEM PROJECT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 
 add_executable(tests

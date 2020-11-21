@@ -16,14 +16,17 @@ namespace {
   }
 
   void karate(){
-    std::vector<std::vector<size_t>> T = {
-      {0}, {0}, {0}, {0}, {0},
-      {0}, {0}, {0}, {0}, {1},
-      {0}, {0}, {0}, {0}, {1}
+
+    std::unordered_map<size_t, size_t> T{
+      {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0},
+      {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 1},
+      {10, 0},{11,0}, {12, 0}, {13,0},{14,1},
+      {32, 1}, {31, 1}, {30, 1}
     };
+
     UGraph g = from_file("../karate.adjlist");
     auto N = num_vertices(g);
-    auto L = 15;
+    auto L = T.size();
     auto C = 2;
     auto M = 50;
     Eigen::SparseMatrix<double> A(N, N);
@@ -49,21 +52,20 @@ namespace {
     Eigen::MatrixXd W, B;
     dne.fit(W, B);
 
-    std::vector<std::vector<size_t>> correct = {
-      {0}, {0}, {0}, {0}, {0},
-      {0}, {0}, {0}, {0}, {1},
-      {0}, {0}, {0}, {0}, {1},
-      {1}, {0}, {0}, {1}, {0},
-      {1}, {0}, {1}, {1}, {1},
-      {1}, {1}, {1}, {1}, {1},
-      {1}, {1}, {1}, {1}
+    std::vector<size_t> correct = {
+      0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1,
+      0, 0, 0, 0, 1,
+      1, 1, 1, 1, 1,
+      1, 0, 1, 1, 1,
+      1, 1, 1, 1, 1,
+      1, 1, 1, 1
     };
-    std::vector<std::vector<size_t>> answer{};
+    std::vector<size_t> answer{};
     for(size_t n = 0; n < N; ++n){
       Eigen::Index max_index;
       (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      std::vector<size_t> v = {static_cast<size_t>(max_index)};
-      answer.push_back(v);
+      answer.push_back(max_index);
     }
 
     std::cout << "H-dis: " << h_dis(answer, correct) << std::endl;

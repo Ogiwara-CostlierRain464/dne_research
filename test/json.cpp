@@ -147,6 +147,9 @@ TEST(JSON, write){
   // https://www.aminer.org/citation
   // https://academic.microsoft.com/topics/77088390,75949130?fullPath=false
   // https://nlohmann.github.io/json/api/basic_json/get_ref/
-
+  // https://github.com/apoorvavinod/DeepWalk_implementaion for blog catalog
+  // https://github.com/xptree/NetMF for Flicker
+  // https://github.com/xptree/NetSMF for YouTube
+  // Sは左確率行列　なので
 
 }

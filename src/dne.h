@@ -8,7 +8,7 @@
 
 class DNE{
 public:
-  typedef std::vector<std::vector<size_t>> TrainLabel;
+  typedef std::unordered_map<size_t, size_t> TrainLabel;
 
   DNE(Eigen::MatrixXd const &A_,
       TrainLabel const &T_,
@@ -17,6 +17,7 @@ public:
   A(A_), T(T_), N(N_), M(M_),
   C(C_), L(L_), T_in(T_in_){
     // wanna check A is symmetric.
+    assert(T.size() == L);
   }
 
   /**
@@ -47,12 +48,12 @@ private:
     outWO = Eigen::MatrixXd::Zero(M, N);
 
     Eigen::VectorXd sum_mc = W.rowwise().sum();
-    for(size_t i = 0; i < L ; ++i){
-      Eigen::VectorXd wo_i = Eigen::VectorXd::Zero(M);
-      for(auto j : T[i]){
-        wo_i += sum_mc - (C * W.col(j));
-      }
-      outWO.col(i) = wo_i;
+    Eigen::MatrixXd wo = Eigen::MatrixXd::Zero(M,N);
+
+    for(auto &iter: T){
+      auto i = iter.first;
+      auto ci = T.at(i);
+      outWO.col(i) = sum_mc - (C * W.col(ci));
     }
   }
 
@@ -84,22 +85,23 @@ private:
     assert(B.rows() == M and B.cols() == N);
 
     outW = Eigen::MatrixXd::Zero(M, C);
+    Eigen::VectorXd b_sum = Eigen::VectorXd::Zero(M);
+
+    for(size_t i = 0; i < C; ++i){
+      b_sum += B.col(i);
+    }
 
     for(size_t c = 0; c < C; ++c){
       Eigen::VectorXd sum_1 = Eigen::VectorXd::Zero(M);
-      Eigen::VectorXd sum_2 = Eigen::VectorXd::Zero(M);
-      for(size_t i = 0; i < L; ++i){
-        if(std::count(T[i].begin(), T[i].end(), c))
+      for(auto &iter: T){
+        auto i = iter.first;
+        if(T.at(i) == c){
           sum_1 += B.col(i);
-
-      }
-      for(size_t i = 0; i < L; ++i){
-        auto n_ki = T[i].size();
-        sum_2 += n_ki * B.col(i);
+        }
       }
 
       Eigen::MatrixXd w_c;
-      sgn(C * sum_1 - sum_2, w_c);
+      sgn(C * sum_1 - b_sum, w_c);
       outW.col(c) = w_c;
     }
   }
