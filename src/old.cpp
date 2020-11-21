@@ -134,20 +134,6 @@ int main2(){
 
   Eigen::SparseMatrix<double> SparseA(N, N);
 
-  size_t from, to;
-  for(auto i = vertices(g); i.first != i.second; ++i.first){
-    from = *i.first;
-    for(
-      auto j=inv_adjacent_vertices(*i.first, g);
-      j.first != j.second;
-      ++j.first
-    ){
-      to = *j.first;
-      SparseA.insert(from, to) = 1.0;
-    }
-  }
-
-
   MatrixXd A = MatrixXd(SparseA);
 
   // use row wise op

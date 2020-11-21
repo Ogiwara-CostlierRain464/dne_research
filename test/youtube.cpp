@@ -2,6 +2,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <nlohmann/json.hpp>
+#include <boost/graph/undirected_graph.hpp>
+
 #include <list>
 
 using namespace std;
@@ -54,6 +56,8 @@ TEST(YouTube, blogcatalog){
       }
     }
   }
+
+  boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>(edges.begin(), edges.end(), 10312);
 
   cout << edges.size() << endl;
 }
