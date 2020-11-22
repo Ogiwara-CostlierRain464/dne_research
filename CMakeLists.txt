@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.13)
+#
+#set(ENV{CC} gcc)
+#set(ENV{CXX} g++)
+#
+#set(CMAKE_C_COMPILER "gcc")
+#set(CMAKE_CXX_COMPILER "g++")
 
-set(ENV{CC} gcc)
-set(ENV{CXX} g++)
-
-set(CMAKE_C_COMPILER "gcc")
-set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS_DEBUG "-O3")
 
 project(DNE)
 

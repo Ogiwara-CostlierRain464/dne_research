@@ -7,14 +7,14 @@ namespace {
   template <typename T>
   double h_dis(std::vector<T> const &a,
                std::vector<T> const &b){
-    assert(a.size() == b.size());
+//    assert(a.size() == b.size());
     double result = 0;
     for(size_t i = 0; i < a.size(); ++i){
       if(a[i] != b[i]){
-        ++result;
+        result += 1;
       }
     }
-    return result / a.size();
+    return result;
   }
 
   void karate(){
@@ -87,7 +87,7 @@ namespace {
     auto M = 50;
     Eigen::SparseMatrix<double> A(N, N);
 
-    write_graphviz(std::cout, g);
+//    write_graphviz(std::cout, g);
 
     typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
     IndexMap index = get(boost::vertex_index, g);
@@ -101,7 +101,7 @@ namespace {
 //      A.insert(tar, sur) = 1.0;
     }
 
-    assert(A.isApprox(A.transpose()));
+//    assert(A.isApprox(A.transpose()));
 
 
     // use row wise op

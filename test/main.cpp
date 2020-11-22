@@ -67,8 +67,9 @@ TEST_F(Unit, max_index){
 }
 
 TEST_F(Unit, random){
-  auto m = MatrixXd::Random(2, 3);
-  cout << m << endl;
+  auto m = MatrixXd::Random(10000, 10000);
+  auto j = m * m;
+  cout << j.col(0) << endl;
 }
 
 int main(int argc, char **argv){
