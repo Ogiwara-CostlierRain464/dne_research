@@ -149,6 +149,10 @@ namespace {
 
     assert(A.isApprox(A.transpose()));
 
+    printf("S begin\n");
+    Eigen::SparseMatrix<double> S = (A + A * A) / 2;
+    printf("S end\n");
+
 
     // use row wise op
     for(size_t i = 0; i < N; ++i){
@@ -201,6 +205,9 @@ namespace {
       A.row(i) /= A.row(i).sum();
     }
 
+
+
+
     DNE dne(A, T, N, M, C, L, 5);
     Eigen::MatrixXd W, B;
     dne.fit(W, B);
@@ -221,5 +228,6 @@ int main(){
 #ifndef NDEBUG
   printf("This is DEBUG mode.\n");
 #endif
+//  catalog();
   youtube();
 }
