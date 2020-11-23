@@ -124,6 +124,51 @@ namespace {
     std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
   }
 
+  void youtube(){
+    UGraph g;
+    std::unordered_map<size_t, size_t> T;
+    std::vector<size_t> answer;
+
+    auto N = 1138499;
+    auto C = 47;
+    from_txt("../dataset/youtube.txt", N, C, 0.6, g, T, answer);
+    auto L = T.size();
+    auto M = 5000;
+    Eigen::SparseMatrix<double> A(N, N);
+
+    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+    IndexMap index = get(boost::vertex_index, g);
+    typedef boost::graph_traits<UGraph> GraphTraits;
+    typename GraphTraits::edge_iterator ei, ei_end;
+    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
+      auto sur = index[boost::source(*ei, g)];
+      auto tar = index[boost::target(*ei, g)];
+
+      A.insert(sur, tar) = 1.0;
+    }
+
+    assert(A.isApprox(A.transpose()));
+
+
+    // use row wise op
+    for(size_t i = 0; i < N; ++i){
+      A.row(i) /= A.row(i).sum();
+    }
+
+    DNE dne(A, T, N, M, C, L, 5);
+    Eigen::MatrixXd W, B;
+    dne.fit(W, B);
+
+    std::vector<size_t> predicted{};
+    predicted.reserve(N);
+    for(size_t n = 0; n < N; ++n){
+      Eigen::Index max_index;
+      (W.transpose() * B.col(n)).maxCoeff(&max_index);
+      predicted.push_back(max_index);
+    }
+
+    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
+  }
 
   void catalog(){
     UGraph g;
@@ -176,5 +221,5 @@ int main(){
 #ifndef NDEBUG
   printf("This is DEBUG mode.\n");
 #endif
-  catalog();
+  youtube();
 }
