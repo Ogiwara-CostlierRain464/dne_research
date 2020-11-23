@@ -51,10 +51,9 @@ static void from_txt(const std::string &file_name,
   std::ifstream infile(file_name);
   assert(infile);
   std::string line{};
-  typedef std::pair<int, int> Edge;
+  typedef std::pair<int, int> Edge;  // node_id : node_id
   std::vector<Edge> edges{};
-  edges.reserve(667966);
-  std::vector<size_t> groups[group_num]{};
+  std::unordered_map<size_t, std::vector<size_t>> groups{}; // group_id : { node_ids }
   bool group_mode = true;
   while(getline(infile, line)){
     if(line == "########"){
@@ -68,26 +67,31 @@ static void from_txt(const std::string &file_name,
     if(iss >> v1 >> v2 >> weight){
       if(group_mode){
         assert(v2 <= group_num);
-        groups[v2 - 1].push_back(v1);
+        groups[v2-1].push_back(v1-1);
       }else{
-        edges.emplace_back(v1, v2);
+        edges.emplace_back(v1-1, v2-1);
       }
     }
   }
 
   out_graph = UGraph(edges.begin(), edges.end(), node_num);
 
-//  out_T = std::unordered_map<size_t, size_t>();
+  out_T = std::unordered_map<size_t, size_t>();
+  for(size_t group_id = 0; group_id < group_num; ++group_id){
+    auto group_size = groups[group_id].size();
+    assert(group_size >= 1);
+    // node_num : group
+    auto sample_count = ceil(group_size * train_percent);
+    assert(sample_count >= 1);
 
-  for(size_t i = 0; i < group_num; ++i){
-    assert(groups[i].size() >= 1);
-    auto first_node_in_group_i = groups[i][0];
-    out_T[first_node_in_group_i] = i;
+    for(size_t j = 0; j < sample_count; ++j){
+      auto node_in_i = groups[group_id][j];
+      out_T[node_in_i] = group_id;
+    }
   }
 
   out_answer = std::vector<size_t>();
-  auto N = boost::num_vertices(out_graph);
-  out_answer.reserve(N);
+  out_answer.resize(node_num);
   for(size_t group_id = 0; group_id < group_num; ++group_id){
     for(auto node_id : groups[group_id]){
       out_answer[node_id] = group_id;
