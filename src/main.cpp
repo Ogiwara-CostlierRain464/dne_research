@@ -133,7 +133,7 @@ namespace {
     auto C = 47;
     from_txt("../dataset/youtube.txt", N, C, 0.6, g, T, answer);
     auto L = T.size();
-    auto M = 5000;
+    auto M = 500;
     Eigen::SparseMatrix<double> A(N, N);
 
     typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
@@ -147,11 +147,8 @@ namespace {
       A.insert(sur, tar) = 1.0;
     }
 
+    A.makeCompressed();
     assert(A.isApprox(A.transpose()));
-
-    printf("S begin\n");
-    Eigen::SparseMatrix<double> S = (A + A * A) / 2;
-    printf("S end\n");
 
 
     // use row wise op
@@ -227,6 +224,6 @@ int main(){
 #endif
   std::cout << Eigen::nbThreads() << std::endl;
 
-  catalog();
-//  youtube();
+//  catalog();
+  youtube();
 }
