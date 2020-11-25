@@ -68,6 +68,8 @@ namespace {
   }
 
   void youtube(){
+    typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
+
     UGraph g;
     std::unordered_map<size_t, size_t> T;
     std::vector<size_t> answer;
@@ -77,7 +79,7 @@ namespace {
     from_txt("../dataset/youtube.txt", N, C, 0.6, g, T, answer);
     auto L = T.size();
     auto M = 500;
-    Eigen::SparseMatrix<double> A(N, N);
+    Sp A(N, N);
 
     typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
     IndexMap index = get(boost::vertex_index, g);
@@ -93,7 +95,7 @@ namespace {
 //    A.makeCompressed();
 
     printf("S begin\n");
-    Eigen::MatrixXd S = (A + A * A) / 2;
+    Sp S = (A + A * A) / 2;
     printf("S end\n");
 
     assert(A.isApprox(A.transpose()));
