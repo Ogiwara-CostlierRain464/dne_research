@@ -6,7 +6,7 @@ set(ENV{CXX} g++)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
-set(CMAKE_CXX_FLAGS_DEBUG  "-D DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG  "-D DEBUG -fopenmp")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fopenmp")
 
 project(DNE)
