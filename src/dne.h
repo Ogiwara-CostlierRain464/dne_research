@@ -9,8 +9,9 @@
 class DNE{
 public:
   typedef std::unordered_map<size_t, size_t> TrainLabel;
+  typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
-  DNE(Eigen::SparseMatrix<double> const &A_,
+  DNE(Sp const &A_,
       TrainLabel const &T_,
       size_t N_, size_t M_, size_t C_,
       size_t L_, size_t T_in_):
@@ -27,7 +28,7 @@ public:
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(time(nullptr));
     printf("S begin\n");
-    Eigen::SparseMatrix<double> S = (A + A * A) / 2;
+    Sp S = (A + A * A) / 2;
     printf("S end\n");
     W = Eigen::MatrixXd::Random(M, C);
     B = Eigen::MatrixXd::Random(M, N);
@@ -132,7 +133,7 @@ private:
            + rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
   }
 
-  Eigen::SparseMatrix<double> const &A;
+  Sp const &A;
   TrainLabel const &T;
 
   size_t N;

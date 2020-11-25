@@ -18,7 +18,7 @@ namespace {
     return result / a.size();
   }
 
-  void gen(){
+  void karate(){
     UGraph g;
     std::unordered_map<size_t, size_t> T;
     std::vector<size_t> answer;
@@ -42,15 +42,18 @@ namespace {
       A.insert(tar, sur) = 1.0;
     }
 
-    std::cout << A << std::endl;
+//    std::cout << A << std::endl;
 
     assert(A.isApprox(A.transpose()));
 
 
     // use row wise op
+    #pragma omp parallel for
     for(size_t i = 0; i < N; ++i){
       A.row(i) /= A.row(i).sum();
     }
+
+    std::cout << A.row(0) << std::endl;
 
     DNE dne(A, T, N, M, C, L, 5);
     Eigen::MatrixXd W, B;
@@ -68,8 +71,6 @@ namespace {
   }
 
   void youtube(){
-    typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
-
     UGraph g;
     std::unordered_map<size_t, size_t> T;
     std::vector<size_t> answer;
@@ -79,7 +80,7 @@ namespace {
     from_txt("../dataset/youtube.txt", N, C, 0.6, g, T, answer);
     auto L = T.size();
     auto M = 500;
-    Sp A(N, N);
+    DNE::Sp A(N, N);
 
     typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
     IndexMap index = get(boost::vertex_index, g);
@@ -93,10 +94,6 @@ namespace {
     }
 
 //    A.makeCompressed();
-
-    printf("S begin\n");
-    Sp S = (A + A * A) / 2;
-    printf("S end\n");
 
     assert(A.isApprox(A.transpose()));
 
@@ -176,4 +173,5 @@ int main(){
 
 //  catalog();
   youtube();
+//  karate();
 }
