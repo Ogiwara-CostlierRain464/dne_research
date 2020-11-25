@@ -197,16 +197,13 @@ namespace {
       A.insert(sur, tar) = 1.0;
     }
 
-    assert(A.isApprox(A.transpose()));
+//    assert(A.isApprox(A.transpose()));
 
 
     // use row wise op
     for(size_t i = 0; i < N; ++i){
       A.row(i) /= A.row(i).sum();
     }
-
-
-
 
     DNE dne(A, T, N, M, C, L, 5);
     Eigen::MatrixXd W, B;
@@ -225,9 +222,11 @@ namespace {
 }
 
 int main(){
-#ifndef NDEBUG
-  printf("This is DEBUG mode.\n");
+#ifdef DEBUG
+  printf("This is DE    BUG mode.\n");
 #endif
-//  catalog();
-  youtube();
+  std::cout << Eigen::nbThreads() << std::endl;
+
+  catalog();
+//  youtube();
 }

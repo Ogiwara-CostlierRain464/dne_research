@@ -32,7 +32,7 @@ public:
     W = Eigen::MatrixXd::Random(M, C);
     B = Eigen::MatrixXd::Random(M, N);
 
-    for(size_t _ = 1; _ <= 20; ++_){
+    for(size_t _ = 1; _ <= 5; ++_){
       for(size_t i = 1; i <= T_in; ++i){
         eq11(W, B, S);
         std::cout << "updating B" << loss(B, S, W) << std::endl;
