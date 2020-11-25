@@ -181,7 +181,7 @@ namespace {
 
     auto N = 10312;
     auto C = 39;
-    from_txt("../dataset/blogcatalog.txt", N, C, 0.3, g, T, answer);
+    from_txt("../dataset/blogcatalog.txt", N, C, 0.6, g, T, answer);
     auto L = T.size();
     auto M = 50;
     Eigen::SparseMatrix<double> A(N, N);
@@ -223,7 +223,7 @@ namespace {
 
 int main(){
 #ifdef DEBUG
-  printf("This is DE    BUG mode.\n");
+  printf("This is DEBUG mode.\n");
 #endif
   std::cout << Eigen::nbThreads() << std::endl;
 
