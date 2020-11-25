@@ -90,7 +90,7 @@ namespace {
       A.insert(sur, tar) = 1.0;
     }
 
-    A.makeCompressed();
+//    A.makeCompressed();
 
     printf("S begin\n");
     Eigen::MatrixXd S = (A + A * A) / 2;
