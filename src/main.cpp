@@ -92,9 +92,9 @@ namespace {
 
     A.makeCompressed();
 
-    printf("S begin\n");
-    Eigen::SparseMatrix<double> S = (A + A * A) / 2;
-    printf("S end\n");
+//    printf("S begin\n");
+//    Eigen::SparseMatrix<double> S = (A + A * A) / 2;
+//    printf("S end\n");
 
     assert(A.isApprox(A.transpose()));
 
