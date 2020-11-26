@@ -28,11 +28,15 @@ public:
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(time(nullptr));
     printf("S begin\n");
-    Sp S = (A + A * A) / 2;
+//    Sp S = (A + A * A) / 2;
+    Sp S = Sp(N, N);
     printf("S end\n");
+    printf("W\n");
     W = Eigen::MatrixXd::Random(M, C);
+    printf("B\n");
     B = Eigen::MatrixXd::Random(M, N);
 
+    printf("eq11\n");
     for(size_t _ = 1; _ <= 5; ++_){
       for(size_t i = 1; i <= T_in; ++i){
         eq11(W, B, S);
