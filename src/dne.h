@@ -17,7 +17,6 @@ public:
       size_t L_, size_t T_in_):
   A(A_), T(T_), N(N_), M(M_),
   C(C_), L(L_), T_in(T_in_){
-    // wanna check A is symmetric.
     assert(T.size() == L);
   }
 
@@ -28,8 +27,7 @@ public:
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(time(nullptr));
     printf("S begin\n");
-//    Sp S = (A + A * A) / 2;
-    Sp S = Sp(N, N);
+    Sp S = (A + A * A) / 2;
     printf("S end\n");
     printf("W\n");
     W = Eigen::MatrixXd::Random(M, C);
@@ -40,10 +38,10 @@ public:
     for(size_t _ = 1; _ <= 5; ++_){
       for(size_t i = 1; i <= T_in; ++i){
         eq11(W, B, S);
-        std::cout << "updating B" << loss(B, S, W) << std::endl;
+        std::cout << "updating B" /* << loss(B, S, W) */ << std::endl;
       }
       eq13(B, W);
-      std::cout << "updating W" << loss(B, S, W) << std::endl;
+      std::cout << "updating W" /* << loss(B, S, W) */ << std::endl;
     }
   }
 
@@ -56,6 +54,8 @@ private:
 
     Eigen::VectorXd sum_mc = W.rowwise().sum();
     Eigen::MatrixXd wo = Eigen::MatrixXd::Zero(M,N);
+
+    printf("for\n");
 
     for(auto &iter: T){
       auto i = iter.first;
@@ -72,12 +72,19 @@ private:
    */
   void eq11(Eigen::MatrixXd const &W,
             Eigen::MatrixXd &B,
-            Eigen::MatrixXd const &S){
+            Sp const &S){
+    printf("in\n");
+
     assert(B.rows() == M and B.cols() == N);
     assert(S.rows() == N and S.cols() == N);
     assert(W.rows() == M and W.cols() == C);
     Eigen::MatrixXd wo;
+    printf("WO\n");
+
     WO(W, wo);
+
+    printf("DLB\n");
+
     Eigen::MatrixXd dLB = -B * S
       + lambda * wo
       + mu * (B * B.transpose() * B)
@@ -126,7 +133,7 @@ private:
   }
 
   double loss(Eigen::MatrixXd const &B,
-              Eigen::MatrixXd const &S,
+              Sp &S,
               Eigen::MatrixXd const &W){
     Eigen::MatrixXd wo;
     WO(W, wo);

@@ -94,14 +94,12 @@ namespace {
     }
 
 //    A.makeCompressed();
-
-    assert(A.isApprox(A.transpose()));
+//    assert(A.isApprox(A.transpose()));
 
     #pragma omp parallel for
     for(size_t i = 0; i < N; ++i){
       A.row(i) /= A.row(i).sum();
     }
-
 
     DNE dne(A, T, N, M, C, L, 5);
     Eigen::MatrixXd W, B;
