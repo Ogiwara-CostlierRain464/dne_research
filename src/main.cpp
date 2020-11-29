@@ -1,7 +1,7 @@
 #include "dne.h"
+#include "real_dne.h"
 #include "loader.h"
 #include <boost/graph/graphviz.hpp>
-#include <omp.h>
 
 
 namespace {
@@ -121,11 +121,13 @@ namespace {
     std::unordered_map<size_t, size_t> T;
     std::vector<size_t> answer;
 
+    // Edge Number: 667932
+    // x64.77 density. (or 32?)
     auto N = 10312;
     auto C = 39;
     from_txt("../dataset/blogcatalog.txt", N, C, 0.6, g, T, answer);
     auto L = T.size();
-    auto M = 50;
+    auto M = 200;
     Eigen::SparseMatrix<double> A(N, N);
 
     typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
@@ -161,6 +163,56 @@ namespace {
 
     std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
   }
+
+  void wiki(){
+    UGraph g;
+    std::unordered_map<size_t, size_t> T;
+    std::vector<size_t> answer;
+
+    // Edge Number: 17981
+    // C = 16
+    auto N = 2405;
+    auto C = 17;
+    from_txt2("../dataset/Wiki_category.txt",
+              "../dataset/Wiki_edgelist.txt",
+              N, C, 0.5, g, T, answer);
+    auto L = T.size();
+    auto M = 50;
+    DNE::Sp A(N, N);
+
+    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+    IndexMap index = get(boost::vertex_index, g);
+    typedef boost::graph_traits<UGraph> GraphTraits;
+    typename GraphTraits::edge_iterator ei, ei_end;
+    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
+      auto sur = index[boost::source(*ei, g)];
+      auto tar = index[boost::target(*ei, g)];
+
+      A.insert(sur, tar) = 1.0;
+//      A.coeffRef(sur, tar) = 1.0;
+    }
+
+
+    // use row wise op
+    for(size_t i = 0; i < N; ++i){
+      A.row(i) /= A.row(i).sum();
+    }
+
+    DNE dne(A, T, N, M, C, L, 20);
+//    RealDNE dne(A, T, N, M, C, L, 20);
+    Eigen::MatrixXd W, B;
+    dne.fit(W, B);
+
+    std::vector<size_t> predicted{};
+    predicted.reserve(N);
+    for(size_t n = 0; n < N; ++n){
+      Eigen::Index max_index;
+      (W.transpose() * B.col(n)).maxCoeff(&max_index);
+      predicted.push_back(max_index);
+    }
+
+    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
+  }
 }
 
 int main(){
@@ -170,6 +222,7 @@ int main(){
   std::cout << Eigen::nbThreads() << std::endl;
 
 //  catalog();
-  youtube();
+//  youtube();
 //  karate();
+  wiki();
 }

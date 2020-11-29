@@ -1,22 +1,23 @@
-#ifndef DNE_DNE_H
-#define DNE_DNE_H
+#ifndef DNE_REAL_DNE_H
+#define DNE_REAL_DNE_H
+
 
 #include <iostream>
 #include <Eigen/Sparse>
 #include <Eigen/SparseCore>
 
 
-class DNE{
+class RealDNE{
 public:
   typedef std::unordered_map<size_t, size_t> TrainLabel;
   typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
-  DNE(Sp const &A_,
+  RealDNE(Sp const &A_,
       TrainLabel const &T_,
       size_t N_, size_t M_, size_t C_,
       size_t L_, size_t T_in_):
-  A(A_), T(T_), N(N_), M(M_),
-  C(C_), L(L_), T_in(T_in_){
+    A(A_), T(T_), N(N_), M(M_),
+    C(C_), L(L_), T_in(T_in_){
     assert(T.size() == L);
   }
 
@@ -29,7 +30,7 @@ public:
     Sp S = (A + A * A) / 2;
     W = Eigen::MatrixXd::Random(M, C);
     B = Eigen::MatrixXd::Random(M, N);
-    for(size_t _ = 1; _ <= 50; ++_){
+    for(size_t _ = 1; _ <= 20; ++_){
       for(size_t i = 1; i <= T_in; ++i){
         eq11(W, B, S);
         std::cout << "updating B " << loss(B, S, W)  << std::endl;
@@ -70,13 +71,14 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd dLB = -B * S
-      + lambda * wo
-      + mu * (B * B.transpose() * B)
-      + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+                          + lambda * wo
+                          + mu * (B * B.transpose() * B)
+                          + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
-    Eigen::MatrixXd cf;
-    CF(tau * B - dLB, B, cf);
-    sgn(cf, B);
+//    Eigen::MatrixXd cf;
+//    CF(tau * B - dLB, B, cf);
+//    sgn(cf, B);
+    CF_Epsilon(tau * B - dLB, B, B);
   }
 
   void eq13(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
@@ -99,7 +101,8 @@ private:
       }
 
       Eigen::MatrixXd w_c;
-      sgn(C * sum_1 - b_sum, w_c);
+//      sgn(C * sum_1 - b_sum, w_c);
+      w_c = C * sum_1 - b_sum;
       outW.col(c) = w_c;
     }
   }
@@ -111,8 +114,8 @@ private:
   }
 
   static void CF_Epsilon(Eigen::MatrixXd const &x,
-                 Eigen::MatrixXd const &y,
-                 Eigen::MatrixXd &out){
+                         Eigen::MatrixXd const &y,
+                         Eigen::MatrixXd &out){
     out = (x.array() < 0.01 && x.array() > -0.01).select(y, x);
   }
 
@@ -148,4 +151,4 @@ private:
   double rho = 0.00001;
 };
 
-#endif //DNE_DNE_H
+#endif //DNE_REAL_DNE_H
