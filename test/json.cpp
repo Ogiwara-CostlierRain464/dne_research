@@ -22,8 +22,8 @@ TEST(JSON, load){
   bool f_name_flag = false;
 
 
-  std::vector<uint> ids;
-  std::vector<uint> refs;
+  std::vector<int> ids;
+  std::vector<int> refs;
 
   std::ofstream field("field.txt");
 

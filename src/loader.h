@@ -56,9 +56,9 @@ static void from_txt(const std::string &file_name,
   std::unordered_map<size_t, std::vector<size_t>> groups{}; // group_id : { node_ids }
   bool group_mode = true;
 
-  std::vector<bool> group_assigned{};
-  group_assigned.resize(node_num);
-  std::fill(group_assigned.begin(), group_assigned.end(), false);
+  std::vector<int> group_assigned_count{};
+  group_assigned_count.resize(node_num);
+  std::fill(group_assigned_count.begin(), group_assigned_count.end(), 0);
 
   while(getline(infile, line)){
     if(line == "########"){
@@ -74,11 +74,12 @@ static void from_txt(const std::string &file_name,
         assert(v2 <= group_num);
         groups[v2-1].push_back(v1-1);
 
-        if(group_assigned[v1-1]){
-          std::cout << v1 - 1 << " is doubled" << std:: endl;
+        if(group_assigned_count[v1-1] >= 1){
+//          std::cout << v1 - 1 << " is doubled" << std:: endl;
+          // このようなnodeは消すべき。
         }
 
-        group_assigned[v1-1] = true;
+        ++group_assigned_count[v1-1];
 
       }else{
         edges.emplace_back(v1-1, v2-1);
@@ -88,6 +89,15 @@ static void from_txt(const std::string &file_name,
 
   out_graph = UGraph(edges.begin(), edges.end(), node_num);
 
+  // clean process: 二つ以上のクラスが割り当てられたらそのnodeはグラフから消す
+  for(auto class_count : group_assigned_count){
+      if(class_count >= 2){
+          // この時点でつくられたのはgraphとgroups
+
+      }
+  }
+
+  // clean process: 孤立したnodeの削除
   out_T = std::unordered_map<size_t, size_t>();
   for(size_t group_id = 0; group_id < group_num; ++group_id){
     auto group_size = groups[group_id].size();
@@ -194,6 +204,9 @@ static void from_txt2(
     }
   }
 }
+
+// from fileが二つもあるのはまずきもいよね
+// refactoringのじかんだ
 
 
 #endif //DNE_LOADER_H
