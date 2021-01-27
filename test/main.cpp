@@ -55,7 +55,8 @@ TEST_F(Unit, colwise_sum){
   a << 0, 1, 0,
       -1, 3, 0,
        3, 4, 9;
-  cout << a.rowwise().sum() << endl;
+//  cout << a.rowwise().sum() << endl;
+  cout << a.array().mean() << endl;
 }
 
 TEST_F(Unit, max_index){

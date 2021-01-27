@@ -1,5 +1,5 @@
-#ifndef DNE_DNE_H
-#define DNE_DNE_H
+#ifndef DNE_ORIGINAL_DNE_H
+#define DNE_ORIGINAL_DNE_H
 
 #include <iostream>
 #include <Eigen/Sparse>
@@ -7,20 +7,22 @@
 #include <Eigen/SVD>
 #include <chrono>
 #include <ctime>
+
 #include "randomized_svd.h"
 
-class DNE{
+class OriginalDNE{
 public:
   typedef std::unordered_map<size_t, size_t> TrainLabel;
   typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
-  DNE(Sp const &A_,
-      TrainLabel const &T_,
-      size_t N_, size_t M_, size_t C_,
-      size_t L_, size_t T_in_):
-  A(A_), T(T_), N(N_), M(M_),
-  C(C_), L(L_), T_in(T_in_){
+  OriginalDNE(Sp const &A_,
+                TrainLabel const &T_,
+                size_t N_, size_t M_, size_t C_,
+                size_t L_, size_t T_in_):
+    A(A_), T(T_), N(N_), M(M_),
+    C(C_), L(L_), T_in(T_in_){
     assert(T.size() == L);
+    std::cout << "OriginalDNE" << std::endl;
   }
 
   /**
@@ -29,28 +31,21 @@ public:
    */
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(time(nullptr));
-
-//    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     Sp S = (A + A * A) / 2;
-//    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-//    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-
     Eigen::MatrixXd SC = S;
-    W = Eigen::MatrixXd::Random(M, C);
-    B = Eigen::MatrixXd::Random(M, N);
+    auto svd = RandomizedSvd(SC, M);
 
-    for(size_t _ = 1; _ <= 10; ++_){
-      for(size_t i = 1; i <= T_in; ++i){
-        eq11(W, B, S);
-        std::cout << "updating B " << loss(B, S, W)  << std::endl;
-      }
-      eq13(B, W);
-      std::cout << "updating W " << loss(B, S, W) << std::endl;
+//    sgn((svd.matrixU() * (svd.singularValues().asDiagonal().toDenseMatrix().array().sqrt().matrix())).transpose(), B);
+    sgn(svd.matrixV().transpose(), B);
+
+
+    W = Eigen::MatrixXd::Zero(M, C);
+    eq20(B,W);
+
+    for(size_t _ = 1; _ <= 20; ++_){
+      eqB(W,B);
+      eq20(B,W);
     }
-
-    Eigen::MatrixXd wo;
-    WO(W, wo);
-    std::cout << "WO is: " << wo << std::endl;
   }
 
 private:
@@ -84,13 +79,25 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd dLB = -B * S
-      + lambda * wo
-      + mu * (B * B.transpose() * B)
-      + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+                          + lambda * wo
+                          + mu * (B * B.transpose() * B)
+                          + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
-    Eigen::MatrixXd cf;
-    CF(tau * B - dLB, B, cf);
-    sgn(cf, B);
+//    Eigen::MatrixXd cf;
+//    CF(tau * B - dLB, B, cf);
+//    sgn2(cf, B);
+    B = tau * B - dLB;
+  }
+
+  void eqB(Eigen::MatrixXd const &W,
+           Eigen::MatrixXd &B){
+    Eigen::MatrixXd wo;
+    WO(W, wo);
+    sgn(-wo, B);
+  }
+
+  void eq20(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
+    eq13(B,outW);
   }
 
   void eq13(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
@@ -113,7 +120,8 @@ private:
       }
 
       Eigen::MatrixXd w_c;
-      sgn(C * sum_1 - b_sum, w_c);
+//      sgn(C * sum_1 - b_sum, w_c);
+      w_c = C * sum_1 - b_sum;
       outW.col(c) = w_c;
     }
   }
@@ -124,10 +132,18 @@ private:
     out = (x.array()).select(y, x);
   }
 
+
   static void sgn(Eigen::MatrixXd const &x,
                   Eigen::MatrixXd &out){
     out = x.array().sign().matrix();
     out = (out.array() == 0).select(-1, out);
+  }
+
+  static void sgn2(Eigen::MatrixXd const &x,
+                   Eigen::MatrixXd &out){
+    double mean = x.array().mean();
+    Eigen::MatrixXd signed_ = (x.array() > mean).select(+1, x);
+    out = (signed_.array() <= mean).select(-1, signed_);
   }
 
   double loss(Eigen::MatrixXd const &B,
@@ -151,9 +167,9 @@ private:
   size_t L;
   size_t T_in;
   double tau = 1;
-  double lambda = 1;
-  double mu = 0.01;
-  double rho = 0.01;
+  double lambda = 0.00001;
+  double mu = 0.00001;
+  double rho = 0.00001;
 };
 
-#endif //DNE_DNE_H
+#endif //DNE_ORIGINAL_DNE_H

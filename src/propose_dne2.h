@@ -1,5 +1,5 @@
-#ifndef DNE_DNE_H
-#define DNE_DNE_H
+#ifndef DNE_PROPOSE_DNE2_H
+#define DNE_PROPOSE_DNE2_H
 
 #include <iostream>
 #include <Eigen/Sparse>
@@ -9,12 +9,12 @@
 #include <ctime>
 #include "randomized_svd.h"
 
-class DNE{
+class ProposeDNE2{
 public:
   typedef std::unordered_map<size_t, size_t> TrainLabel;
   typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
-  DNE(Sp const &A_,
+  ProposeDNE2(Sp const &A_,
       TrainLabel const &T_,
       size_t N_, size_t M_, size_t C_,
       size_t L_, size_t T_in_):
@@ -30,27 +30,46 @@ public:
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(time(nullptr));
 
-//    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     Sp S = (A + A * A) / 2;
-//    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-//    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 
     Eigen::MatrixXd SC = S;
-    W = Eigen::MatrixXd::Random(M, C);
-    B = Eigen::MatrixXd::Random(M, N);
+    auto svd = RandomizedSvd(SC, M);
+
+    Eigen::MatrixXd Sigma = svd.singularValues().asDiagonal().toDenseMatrix();
+
+    B = Sigma.array().sqrt().matrix() * svd.matrixV().transpose();
+
+//    Eigen::MatrixXd Sigma = svd.singularValues().asDiagonal().toDenseMatrix();
+//    Eigen::MatrixXd SPlus = B.transpose() * (Sigma.array() != 0).select(Sigma.array().inverse(), Sigma).matrix() * svd.matrixU().transpose();
+    sgn(B, B);
+
+    W = Eigen::MatrixXd::Zero(M, C);
+    // Wを学習
+    eq13(B, W);
+
+    Eigen::MatrixXd Inv = (SC - mu * Eigen::MatrixXd::Identity(N,N)).inverse();
+
+    Eigen::MatrixXd wo_;
+    WO(W, wo_);
+
+    std::cout << "WO is" << std::endl;
+    std::cout <<  wo_ << std::endl;
+
 
     for(size_t _ = 1; _ <= 10; ++_){
-      for(size_t i = 1; i <= T_in; ++i){
-        eq11(W, B, S);
-        std::cout << "updating B " << loss(B, S, W)  << std::endl;
-      }
+      Eigen::MatrixXd wo;
+      WO(W, wo);
+      sgn(lambda * wo * Inv, B);
+
       eq13(B, W);
       std::cout << "updating W " << loss(B, S, W) << std::endl;
     }
 
-    Eigen::MatrixXd wo;
-    WO(W, wo);
-    std::cout << "WO is: " << wo << std::endl;
+    std::cout << B << std::endl;
   }
 
 private:
@@ -61,7 +80,6 @@ private:
     outWO = Eigen::MatrixXd::Zero(M, N);
 
     Eigen::VectorXd sum_mc = W.rowwise().sum();
-//    Eigen::MatrixXd wo = Eigen::MatrixXd::Zero(M,N);
     for(auto &iter: T){
       auto i = iter.first;
       auto ci = T.at(i);
@@ -83,14 +101,35 @@ private:
     assert(W.rows() == M and W.cols() == C);
     Eigen::MatrixXd wo;
     WO(W, wo);
-    Eigen::MatrixXd dLB = -B * S
-      + lambda * wo
-      + mu * (B * B.transpose() * B)
-      + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+    std::cout << wo.transpose() * wo << std::endl;
+//    Eigen::MatrixXd dLB = -B * S
+//      + lambda * wo
+//      + mu * (B * B.transpose() * B)
+//      + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
-    Eigen::MatrixXd cf;
-    CF(tau * B - dLB, B, cf);
-    sgn(cf, B);
+    Eigen::MatrixXd nextB =
+      tau * B
+      + B * S
+      - lambda * wo
+      - mu * (B * B.transpose() * B);
+      - rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+
+//    Eigen::MatrixXd cf;
+//    CF(nextB, B, cf);
+//    sgn(cf, B);
+    CF_Epsilon(nextB, B , B);
+  }
+
+  void eq12(Eigen::MatrixXd const &W,
+            Eigen::MatrixXd &B,
+            Sp const &S){
+    Eigen::MatrixXd wo;
+    WO(W, wo);
+    Eigen::MatrixXd tempS = S;
+
+    std::cout << tempS << std::endl;
+
+    B = lambda * wo * tempS.inverse();
   }
 
   void eq13(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
@@ -114,6 +153,7 @@ private:
 
       Eigen::MatrixXd w_c;
       sgn(C * sum_1 - b_sum, w_c);
+//      w_c = C * sum_1 - b_sum;
       outW.col(c) = w_c;
     }
   }
@@ -122,6 +162,13 @@ private:
                  Eigen::MatrixXd const &y,
                  Eigen::MatrixXd &out){
     out = (x.array()).select(y, x);
+  }
+
+  static void CF_Epsilon(Eigen::MatrixXd const &x,
+                 Eigen::MatrixXd const &y,
+                 Eigen::MatrixXd &out){
+//    out = (x.array() < 0.01 && x.array() > -0.01).select(y, x);
+      out = x;
   }
 
   static void sgn(Eigen::MatrixXd const &x,
@@ -156,4 +203,4 @@ private:
   double rho = 0.01;
 };
 
-#endif //DNE_DNE_H
+#endif

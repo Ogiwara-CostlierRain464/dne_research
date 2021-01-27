@@ -159,6 +159,19 @@ static void from_txt2(
 
   out_graph = UGraph(edges.begin(), edges.end(), node_num);
 
+  typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+  IndexMap index = boost::get(boost::vertex_index, out_graph);
+  typedef boost::graph_traits<UGraph> GraphTraits;
+  typename GraphTraits::vertex_iterator v, v_end;
+  for(boost::tie(v, v_end) = boost::vertices(out_graph); v != v_end ; ++v){
+    auto iter_pair = boost::out_edges(*v, out_graph);
+    auto num_edges = std::distance(iter_pair.first, iter_pair.second);
+    if(num_edges == 0){
+      // もし本当に0なら、clean_vertexをする必要はない。
+      boost::remove_vertex(*v, out_graph);
+    }
+  }
+
   out_T = std::unordered_map<size_t, size_t>();
   for(size_t group_id = 0; group_id < group_num; ++group_id){
     auto group_size = groups[group_id].size();
@@ -181,7 +194,6 @@ static void from_txt2(
     }
   }
 }
-
 
 
 #endif //DNE_LOADER_H

@@ -19,6 +19,8 @@ public:
     A(A_), T(T_), N(N_), M(M_),
     C(C_), L(L_), T_in(T_in_){
     assert(T.size() == L);
+
+    std::cout << "Real DNE without SVD" << std::endl;
   }
 
   /**
@@ -30,7 +32,8 @@ public:
     Sp S = (A + A * A) / 2;
     W = Eigen::MatrixXd::Random(M, C);
     B = Eigen::MatrixXd::Random(M, N);
-    for(size_t _ = 1; _ <= 20; ++_){
+
+    for(size_t _ = 1; _ <= 9; ++_){
       for(size_t i = 1; i <= T_in; ++i){
         eq11(W, B, S);
         std::cout << "updating B " << loss(B, S, W)  << std::endl;
@@ -71,14 +74,15 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd dLB = -B * S
-                          + lambda * wo
-                          + mu * (B * B.transpose() * B)
-                          + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + lambda * wo
+      + mu * (B * B.transpose() * B)
+      + rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
 //    Eigen::MatrixXd cf;
 //    CF(tau * B - dLB, B, cf);
 //    sgn(cf, B);
-    CF_Epsilon(tau * B - dLB, B, B);
+    B = tau * B - dLB;
+//    CF_Epsilon(tau * B - dLB, B, B);
   }
 
   void eq13(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
@@ -113,12 +117,6 @@ private:
     out = (x.array()).select(y, x);
   }
 
-  static void CF_Epsilon(Eigen::MatrixXd const &x,
-                         Eigen::MatrixXd const &y,
-                         Eigen::MatrixXd &out){
-    out = (x.array() < 0.01 && x.array() > -0.01).select(y, x);
-  }
-
   static void sgn(Eigen::MatrixXd const &x,
                   Eigen::MatrixXd &out){
     out = x.array().sign().matrix();
@@ -145,7 +143,7 @@ private:
   size_t C;
   size_t L;
   size_t T_in;
-  double tau = 0.00001;
+  double tau = 1;
   double lambda = 0.00001;
   double mu = 0.00001;
   double rho = 0.00001;
