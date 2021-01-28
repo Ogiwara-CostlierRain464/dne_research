@@ -33,9 +33,10 @@ TEST(DataRepo, clean){
     std::vector<size_t> out_answer;
 
     DatasetRepo::clean(0.5, g, groups, nodes, out_T, out_answer);
-    write_graphviz(std::cout, g);
 
-    if(1+1 == 2){
-        assert(true);
-    }
+    EXPECT_EQ(num_vertices(g), 3);
+    EXPECT_EQ(num_vertices(g), 3);
+    EXPECT_EQ(out_T[0], 0);
+    EXPECT_EQ(out_T[1], 1);
+    EXPECT_EQ(out_answer[2], 0);
 }

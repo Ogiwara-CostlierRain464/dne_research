@@ -28,6 +28,8 @@ void DatasetRepo::load(
 
     clean(train_ratio, out_graph, groups, nodes, out_T, out_answer);
 
+
+
 }
 
 void DatasetRepo::clean(
@@ -82,4 +84,25 @@ void DatasetRepo::clean(
     }
 
     // 実は上のアルゴリズムでは孤立したnodeを完全には消せていない。しかしながら、多少のずさんさは許されるであろう。
+    out_T = std::unordered_map<size_t, size_t>();
+    for(size_t group_id = 0; group_id < groups.size(); ++group_id){
+        auto group_size = groups[group_id].size();
+        assert(group_size >= 1);
+
+        auto sample_count = ceil(group_size * train_ratio);
+        assert(sample_count >= 1);
+
+        for(size_t j = 0; j < sample_count; ++j){
+            auto node_in_i = groups[group_id][j];
+            out_T[node_in_i] = group_id;
+        }
+    }
+
+    out_answer = std::vector<size_t>();
+    out_answer.resize(num_vertices(graph));
+    for(size_t group_id = 0; group_id < groups.size(); ++group_id){
+        for(auto node_id : groups[group_id]){
+            out_answer[node_id] = group_id;
+        }
+    }
 }

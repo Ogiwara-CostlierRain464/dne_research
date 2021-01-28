@@ -97,7 +97,7 @@ static void from_txt(const std::string &file_name,
       }
   }
 
-  // clean process: 孤立したnodeの削除
+
   out_T = std::unordered_map<size_t, size_t>();
   for(size_t group_id = 0; group_id < group_num; ++group_id){
     auto group_size = groups[group_id].size();
