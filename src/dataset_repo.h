@@ -3,6 +3,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include "dataset_loader.h"
 
 class DatasetRepo {
@@ -25,8 +26,13 @@ public:
      */
     static void load(
             Dataset dataset,
-            double train_ratio,
             DatasetLoader::UGraph &out_graph,
+            std::unordered_map<size_t, size_t> &out_T,
+            std::vector<size_t> &out_answer);
+
+    static void loadS(
+            Dataset dataset,
+            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &S,
             std::unordered_map<size_t, size_t> &out_T,
             std::vector<size_t> &out_answer);
 
@@ -36,10 +42,14 @@ public:
     template<class Matrix>
     static void loadMatrix(const std::string &filename, Matrix &mat);
 
+    template<class SparseMatrix>
+    static void saveSparseMatrix(const std::string &filename, const SparseMatrix &mat);
+
+    template<class SparseMatrix>
+    static void loadSparseMatrix(const std::string &filename, SparseMatrix &mat);
 
 
-    static void clean(double train_ratio,
-                      DatasetLoader::UGraph &graph,
+    static void clean(DatasetLoader::UGraph &graph,
                       std::unordered_map<size_t, std::vector<size_t>> &groups,
                       std::unordered_map<size_t, std::vector<size_t>> &nodes,
                       std::unordered_map<size_t, size_t> &out_T,

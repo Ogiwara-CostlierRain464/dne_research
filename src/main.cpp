@@ -5,8 +5,11 @@
 #include "loader.h"
 #include "experiment_dne.h"
 #include "original_dne.h"
+#include "dataset_repo.h"
+#include "param.h"
 #include <boost/graph/graphviz.hpp>
 #include <gflags/gflags.h>
+#include <glog/logging.h>
 
 
 DEFINE_string(message, "Hello world!", "Message to print");
@@ -74,6 +77,15 @@ namespace {
     }
 
     std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
+  }
+
+  void karate2(){
+      UGraph g;
+      std::unordered_map<size_t, size_t> T;
+      std::vector<size_t> answer;
+
+      DatasetRepo::load(DatasetRepo::Karate, 0.5, g, T, answer);
+
   }
 
   void youtube(){
@@ -473,7 +485,7 @@ namespace {
   }
 }
 
-int main(){
+int main(int argc, char* argv[]){
     // 実験を円滑に行うために、パラメータを受け取れるようにすべきである。
     // それはともかく、元のDNE class自体がそうすべき？
     // もうgflagsを導入するか～、glogもね
@@ -482,13 +494,11 @@ int main(){
     // とはいえど、すぐに実装はかえたいよね
     // 平均とかどうとるのさ、プログラム中でfor回していくとかだろうねえ
 
-    int acc = 0;
-    for(size_t i = 0; i < 10; ++i){
-        srand(time(nullptr));
-        auto r = rand();
-        acc += r;
-    }
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    FLAGS_log_dir = "C:\\Windows\\Temp";
+#endif
 
+    google::InitGoogleLogging(argv[0]);
 
 
 

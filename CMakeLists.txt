@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.13)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
-#set(CMAKE_CXX_FLAGS_DEBUG  "-D DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG  "-Wa,-mbig-obj")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fopenmp")
 
 project(DNE)
@@ -18,6 +18,7 @@ file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS src/*.h)
 
 find_package(Boost 1.40)
+add_subdirectory(third_party/glog)
 add_subdirectory(third_party/gflags)
 
 
@@ -37,6 +38,7 @@ target_link_libraries(
         LINK_PUBLIC
         ${Boost_LIBRARIES}
         gflags
+        glog
 )
 
 add_subdirectory(third_party/json)
