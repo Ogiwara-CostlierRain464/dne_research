@@ -1,4 +1,5 @@
 #include "dataset_repo.h"
+#include <fstream>
 
 using namespace std;
 using namespace boost;
@@ -105,4 +106,27 @@ void DatasetRepo::clean(
             out_answer[node_id] = group_id;
         }
     }
+}
+
+template<class Matrix>
+void DatasetRepo::saveMatrix(const string &filename, const Matrix &mat) {
+    ofstream out(filename, ios::out | ios::binary | ios::trunc);
+    assert(out.is_open());
+    typename Matrix::Index rows=mat.rows(), cols=mat.cols();
+    out.write(reinterpret_cast<char*>(&rows), sizeof(typename Matrix::Index));
+    out.write(reinterpret_cast<char*>(&cols), sizeof(typename Matrix::Index));
+    out.write(reinterpret_cast<const char*>(mat.data()), rows*cols*static_cast<typename Matrix::Index>(sizeof(typename Matrix::Scalar)) );
+    out.close();
+}
+
+template<class Matrix>
+void DatasetRepo::loadMatrix(const string &filename, Matrix &mat) {
+    ifstream in(filename, ios::in | ios::binary);
+    assert(in.is_open());
+    typename Matrix::Index rows=0, cols=0;
+    in.read(reinterpret_cast<char*>(&rows),sizeof(typename Matrix::Index));
+    in.read(reinterpret_cast<char*>(&cols),sizeof(typename Matrix::Index));
+    mat.resize(rows, cols);
+    in.read(reinterpret_cast<char*>(mat.data()), rows*cols*static_cast<typename Matrix::Index>(sizeof(typename Matrix::Scalar)) );
+    in.close();
 }

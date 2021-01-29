@@ -6,7 +6,11 @@
 #include "experiment_dne.h"
 #include "original_dne.h"
 #include <boost/graph/graphviz.hpp>
+#include <gflags/gflags.h>
 
+
+DEFINE_string(message, "Hello world!", "Message to print");
+DEFINE_bool(c, true, "Test message!");
 
 namespace {
   template <typename T>
@@ -470,9 +474,30 @@ namespace {
 }
 
 int main(){
+    // 実験を円滑に行うために、パラメータを受け取れるようにすべきである。
+    // それはともかく、元のDNE class自体がそうすべき？
+    // もうgflagsを導入するか～、glogもね
+    // glogではどうするか？とりあえず実験の取り方をもうちょっとは楽にしたい
+    // パラメータはコマンドラインから指定？で結果はすべて出力
+    // とはいえど、すぐに実装はかえたいよね
+    // 平均とかどうとるのさ、プログラム中でfor回していくとかだろうねえ
+
+    int acc = 0;
+    for(size_t i = 0; i < 10; ++i){
+        srand(time(nullptr));
+        auto r = rand();
+        acc += r;
+    }
+
+
+
+
+
 #ifdef DEBUG
   printf("This is DEBUG mode.\n");
 #endif
+
+  std::cout << FLAGS_message << std::endl;
   std::cout << Eigen::nbThreads() << std::endl;
 
 //  catalog();

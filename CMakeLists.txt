@@ -18,6 +18,7 @@ file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS src/*.h)
 
 find_package(Boost 1.40)
+add_subdirectory(third_party/gflags)
 
 
 add_executable(${PROJECT_NAME}
@@ -35,6 +36,7 @@ target_link_libraries(
         ${PROJECT_NAME}
         LINK_PUBLIC
         ${Boost_LIBRARIES}
+        gflags
 )
 
 add_subdirectory(third_party/json)

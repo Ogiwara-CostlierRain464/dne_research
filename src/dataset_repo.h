@@ -2,6 +2,7 @@
 #define DNE_DATASET_REPO_H
 
 #include <boost/graph/adjacency_list.hpp>
+#include <Eigen/Dense>
 #include "dataset_loader.h"
 
 class DatasetRepo {
@@ -28,6 +29,14 @@ public:
             DatasetLoader::UGraph &out_graph,
             std::unordered_map<size_t, size_t> &out_T,
             std::vector<size_t> &out_answer);
+
+    template<class Matrix>
+    static void saveMatrix(const std::string &filename, const Matrix &mat);
+
+    template<class Matrix>
+    static void loadMatrix(const std::string &filename, Matrix &mat);
+
+
 
     static void clean(double train_ratio,
                       DatasetLoader::UGraph &graph,
