@@ -521,5 +521,5 @@ int main(int argc, char* argv[]){
     Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
     std::unordered_map<size_t, size_t> T;
     std::unordered_map<size_t, size_t> answer;
-    DatasetRepo::loadS(DatasetRepo::Flickr, S, T, answer);
+    DatasetRepo::loadS(DatasetRepo::YouTube, S, T, answer);
 }
