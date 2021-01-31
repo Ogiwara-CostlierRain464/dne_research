@@ -6,7 +6,6 @@
 #include "experiment_dne.h"
 #include "original_dne.h"
 #include "dataset_repo.h"
-#include "param.h"
 #include <boost/graph/graphviz.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -84,7 +83,6 @@ namespace {
       std::unordered_map<size_t, size_t> T;
       std::vector<size_t> answer;
 
-      DatasetRepo::load(DatasetRepo::Karate, 0.5, g, T, answer);
 
   }
 
@@ -495,7 +493,7 @@ int main(int argc, char* argv[]){
     // 平均とかどうとるのさ、プログラム中でfor回していくとかだろうねえ
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    FLAGS_log_dir = "C:\\Windows\\Temp";
+    FLAGS_log_dir = R"(C:\Windows\Temp\DNE)";
 #endif
 
     google::InitGoogleLogging(argv[0]);
@@ -519,5 +517,9 @@ int main(int argc, char* argv[]){
 
 //  experiment1();
 //  experiment2();
-    flicker();
+//    flicker();
+    Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
+    std::unordered_map<size_t, size_t> T;
+    std::vector<size_t> answer;
+    DatasetRepo::loadS(DatasetRepo::BlogCatalog, S, T, answer);
 }

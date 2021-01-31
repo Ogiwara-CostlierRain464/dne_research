@@ -2,6 +2,7 @@
 #include <fstream>
 #include "param.h"
 #include <unistd.h>
+#include <glog/logging.h>
 
 using namespace std;
 using namespace boost;
@@ -23,6 +24,7 @@ void DatasetRepo::load(
                     "../dataset/karate.txt",
                     N, C, out_graph, groups, nodes);
         }
+        break;
         case Dataset::Flickr: {
             auto N = 80513;
             auto C = 195;
@@ -30,6 +32,33 @@ void DatasetRepo::load(
                     "../dataset/flickr.txt",
                     N, C, out_graph, groups, nodes);
         }
+        break;
+        case Dataset::YouTube: {
+            auto N = 1138499;
+            auto C = 47;
+            DatasetLoader::from_my_format("../dataset/youtube.txt",
+                    N, C, out_graph, groups, nodes);
+        }
+        break;
+        case Dataset::BlogCatalog: {
+            // Edge Number: 667932
+            // x64.77 density. (or 32?)
+            auto N = 10312;
+            auto C = 39;
+            DatasetLoader::from_my_format("../dataset/blogcatalog.txt",
+                                          N, C, out_graph, groups, nodes);
+        }
+        break;
+        case Dataset::Wiki: {
+            // Edge Number: 17981
+            // C = 16
+            auto N = 2405;
+            auto C = 17;
+            DatasetLoader::from_separate_format("../dataset/Wiki_category.txt",
+                                                "../dataset/Wiki_edgelist.txt",
+                                                N, C, out_graph, groups, nodes);
+        }
+        break;
         default: {
             assert(false);
         }
@@ -96,10 +125,11 @@ void DatasetRepo::clean(
     out_T = std::unordered_map<size_t, size_t>();
     for(size_t group_id = 0; group_id < groups.size(); ++group_id){
         auto group_size = groups[group_id].size();
-        assert(group_size >= 1);
+        // 前の処理で、このサイズが0になる可能性がある。
+//        assert(group_size >= 1);
 
         auto sample_count = ceil(group_size * FLAGS_train_ratio);
-        assert(sample_count >= 1);
+//        assert(sample_count >= 1);
 
         for(size_t j = 0; j < sample_count; ++j){
             auto node_in_i = groups[group_id][j];
@@ -140,28 +170,59 @@ void DatasetRepo::loadMatrix(const string &filename, Matrix &mat) {
 }
 
 void
-DatasetRepo::loadS(DatasetRepo::Dataset dataset, Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &S,
+DatasetRepo::loadS(DatasetRepo::Dataset dataset, Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
                    std::unordered_map<size_t, size_t> &out_T, vector<size_t> &out_answer) {
     UGraph g;
     load(dataset, g, out_T, out_answer);
 
-    const char *matrix_data_path;
+    string matrix_data_path;
     switch (dataset) {
         case Karate:
             matrix_data_path = "../dataset/karate.bin";
             break;
         case YouTube:
+            matrix_data_path = "../dataset/youtube.bin";
             break;
         case Flickr:
+            matrix_data_path = "../dataset/flickr.bin";
             break;
         case Wiki:
+            matrix_data_path = "../dataset/wiki.bin";
             break;
+        case BlogCatalog:
+            matrix_data_path = "../dataset/blogcatalog.bin";
     }
 
-    if(access( matrix_data_path, F_OK )){
+    if(access( matrix_data_path.c_str(), F_OK ) != -1){
         // load
+        LOG(INFO) << "loading: " << matrix_data_path;
+        loadSparseMatrix(matrix_data_path, out_S);
     }else{
         // save
+        LOG(INFO) << "save matrix S to: " << matrix_data_path;
+        auto node_num = out_answer.size();
+
+        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> A(node_num, node_num);
+        typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+        IndexMap index = get(boost::vertex_index, g);
+        typedef boost::graph_traits<UGraph> GraphTraits;
+        typename GraphTraits::edge_iterator ei, ei_end;
+        for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
+            auto sur = index[boost::source(*ei, g)];
+            auto tar = index[boost::target(*ei, g)];
+
+            A.coeffRef(sur, tar) = 1.0;
+            A.coeffRef(tar, sur) = 1.0;
+        }
+        assert(A.isApprox(A.transpose()));
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < node_num; ++i){
+            A.row(i) /= A.row(i).sum();
+        }
+
+        out_S = (A + A * A) / 2;
+        saveSparseMatrix(matrix_data_path, out_S);
     }
 }
 

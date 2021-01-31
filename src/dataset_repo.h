@@ -13,7 +13,8 @@ public:
         YouTube,
         Flickr,
         Karate,
-        Wiki
+        Wiki,
+        BlogCatalog
     };
 
     /**

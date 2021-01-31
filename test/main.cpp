@@ -28,6 +28,10 @@ TEST_F(Unit, select){
   cout << (a.array() == 0).select(
     /*then*/ b,
     /*else*/ a) << endl;
+
+    for(size_t j = 0; j < 0; ++j){
+        assert(false);
+    }
 }
 
 TEST_F(Unit, sign){

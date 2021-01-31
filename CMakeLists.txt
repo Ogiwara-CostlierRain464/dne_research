@@ -91,5 +91,5 @@ add_executable(tests
         ${PROJECT_SOURCES}
         ${PROJECT_HEADERS}
 )
-target_link_libraries(tests gtest_main)
+target_link_libraries(tests gtest_main gflags glog)
 add_test(NAME example_test COMMAND tests)

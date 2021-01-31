@@ -32,7 +32,7 @@ TEST(DataRepo, clean){
     std::unordered_map<size_t, size_t> out_T;
     std::vector<size_t> out_answer;
 
-    DatasetRepo::clean(0.5, g, groups, nodes, out_T, out_answer);
+    DatasetRepo::clean(g, groups, nodes, out_T, out_answer);
 
     EXPECT_EQ(num_vertices(g), 3);
     EXPECT_EQ(num_vertices(g), 3);

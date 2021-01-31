@@ -27,6 +27,16 @@ public:
             std::unordered_map<size_t, std::vector<size_t>> &out_groups,
             std::unordered_map<size_t, std::vector<size_t>> &out_nodes
     );
+
+    static void from_separate_format(
+            const std::string &class_file_name,
+            const std::string &edge_file_name,
+            size_t node_num,
+            size_t group_num,
+            UGraph &out_graph,
+            std::unordered_map<size_t, std::vector<size_t>> &out_groups,
+            std::unordered_map<size_t, std::vector<size_t>> &out_nodes
+    );
 };
 
 
