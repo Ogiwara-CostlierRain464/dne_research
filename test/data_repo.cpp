@@ -30,7 +30,7 @@ TEST(DataRepo, clean){
     nodes[5] = {};
 
     std::unordered_map<size_t, size_t> out_T;
-    std::vector<size_t> out_answer;
+    std::unordered_map<size_t, size_t> out_answer;
 
     DatasetRepo::clean(g, groups, nodes, out_T, out_answer);
 
