@@ -34,13 +34,19 @@ TEST_F(Unit, select){
     }
 }
 
+TEST_F(Unit, Heap){
+    std::vector<int> a = {1,2,3,4,5};
+    a.erase(std::remove(a.begin(), a.end(), 3), a.end());
+    EXPECT_EQ(a[2], 4);
+}
+
 TEST_F(Unit, sign){
   Matrix3d a;
   a << 0, 1, 0,
       -1, 3, 0,
        3, 4, 9;
 
-  cout << a.array().sign() << endl;
+  cout << ceil(0 * 0.5) << endl;
 }
 
 TEST_F(Unit, shape){

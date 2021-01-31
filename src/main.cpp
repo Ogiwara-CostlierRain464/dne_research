@@ -520,6 +520,6 @@ int main(int argc, char* argv[]){
 //    flicker();
     Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
     std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
+    std::unordered_map<size_t, size_t> answer;
     DatasetRepo::loadS(DatasetRepo::BlogCatalog, S, T, answer);
 }

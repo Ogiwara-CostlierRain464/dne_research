@@ -16,7 +16,9 @@ void DatasetLoader::from_my_format(
     typedef pair<int, int> Edge;
     vector<Edge> edges{};
     out_groups = std::unordered_map<size_t, std::vector<size_t>>{};
+    out_groups.reserve(group_num);
     out_nodes = std::unordered_map<size_t, std::vector<size_t>>{};
+    out_nodes.reserve(node_num);
 
     string tmp_line{};
     bool group_flag = true;

@@ -3,6 +3,7 @@
 #include "param.h"
 #include <unistd.h>
 #include <glog/logging.h>
+#include <iostream>
 
 using namespace std;
 using namespace boost;
@@ -12,7 +13,7 @@ void DatasetRepo::load(
         Dataset dataset,
         DatasetLoader::UGraph &out_graph,
         std::unordered_map<size_t, size_t> &out_T,
-        std::vector<size_t> &out_answer) {
+        std::unordered_map<size_t, size_t> &out_answer) {
 
     std::unordered_map<size_t, std::vector<size_t>> groups;
     std::unordered_map<size_t, std::vector<size_t>> nodes;
@@ -75,11 +76,13 @@ void DatasetRepo::clean(
         std::unordered_map<size_t, std::vector<size_t>> &groups,
         std::unordered_map<size_t, std::vector<size_t>> &nodes,
         std::unordered_map<size_t, size_t> &out_T,
-        vector<size_t> &out_answer) {
+        std::unordered_map<size_t, size_t> &out_answer) {
 
 
     // まずデータをきれいにした後に、値を返す必要がある。
     // graph, nodes, groupsのそれぞれから該当するnodeについての情報を削除
+
+    std::cout << "Before erase" << std::endl;
 
     for(size_t v = 0; v < nodes.size(); ++v){
         // まずは、二つ以上のclassが割り当てられたnodeを削除
@@ -101,6 +104,8 @@ void DatasetRepo::clean(
         }
     }
 
+    std::cout << "After erase" << std::endl;
+
     // 最後に、(クラスが割り当てられていても)孤立したnodeを削除
     typedef boost::graph_traits<UGraph> GraphTraits;
     typename GraphTraits::vertex_iterator v, v_end;
@@ -121,6 +126,8 @@ void DatasetRepo::clean(
         }
     }
 
+    std::cout << "After erase 2" << std::endl;
+
     // 実は上のアルゴリズムでは孤立したnodeを完全には消せていない。しかしながら、多少のずさんさは許されるであろう。
     out_T = std::unordered_map<size_t, size_t>();
     for(size_t group_id = 0; group_id < groups.size(); ++group_id){
@@ -137,8 +144,10 @@ void DatasetRepo::clean(
         }
     }
 
-    out_answer = std::vector<size_t>();
-    out_answer.resize(num_vertices(graph));
+    std::cout << "After erase 3" << std::endl;
+
+    out_answer = std::unordered_map<size_t, size_t>();
+    out_answer.reserve(num_vertices(graph));
     for(size_t group_id = 0; group_id < groups.size(); ++group_id){
         for(auto node_id : groups[group_id]){
             out_answer[node_id] = group_id;
@@ -171,7 +180,7 @@ void DatasetRepo::loadMatrix(const string &filename, Matrix &mat) {
 
 void
 DatasetRepo::loadS(DatasetRepo::Dataset dataset, Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
-                   std::unordered_map<size_t, size_t> &out_T, vector<size_t> &out_answer) {
+                   std::unordered_map<size_t, size_t> &out_T, std::unordered_map<size_t, size_t> &out_answer) {
     UGraph g;
     load(dataset, g, out_T, out_answer);
 

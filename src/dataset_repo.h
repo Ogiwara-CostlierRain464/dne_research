@@ -29,13 +29,13 @@ public:
             Dataset dataset,
             DatasetLoader::UGraph &out_graph,
             std::unordered_map<size_t, size_t> &out_T,
-            std::vector<size_t> &out_answer);
+            std::unordered_map<size_t, size_t> &out_answer);
 
     static void loadS(
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &S,
             std::unordered_map<size_t, size_t> &out_T,
-            std::vector<size_t> &out_answer);
+            std::unordered_map<size_t, size_t> &out_answer);
 
     template<class Matrix>
     static void saveMatrix(const std::string &filename, const Matrix &mat);
@@ -54,7 +54,7 @@ public:
                       std::unordered_map<size_t, std::vector<size_t>> &groups,
                       std::unordered_map<size_t, std::vector<size_t>> &nodes,
                       std::unordered_map<size_t, size_t> &out_T,
-                      std::vector<size_t> &out_answer);
+                      std::unordered_map<size_t, size_t> &out_answerr);
 };
 
 
