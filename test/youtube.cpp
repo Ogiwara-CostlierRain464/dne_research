@@ -1,13 +1,10 @@
 #include <gtest/gtest.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <nlohmann/json.hpp>
+#include <fstream>
 #include <boost/graph/undirected_graph.hpp>
 
 #include <list>
 
 using namespace std;
-using json = nlohmann::json;
 
 class YouTube: public ::testing::Test{};
 

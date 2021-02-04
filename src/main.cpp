@@ -526,5 +526,5 @@ int main(int argc, char* argv[]){
     std::unordered_map<size_t, size_t> T;
     std::unordered_map<size_t, size_t> answer;
 
-    DatasetRepo::load(DatasetRepo::BlogCatalog, S, T, answer);
+    DatasetRepo::load(DatasetRepo::Flickr, S, T, answer);
 }

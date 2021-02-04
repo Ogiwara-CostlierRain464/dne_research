@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS src/*.h)
 
-find_package(Boost 1.40 COMPONENTS system serialization graph REQUIRED)
+find_package(Boost 1.40 COMPONENTS serialization graph REQUIRED)
 add_subdirectory(third_party/glog)
 add_subdirectory(third_party/gflags)
 
