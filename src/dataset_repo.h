@@ -31,6 +31,28 @@ public:
             std::unordered_map<size_t, size_t> &out_T,
             std::unordered_map<size_t, size_t> &out_answer);
 
+    static void load(
+            Dataset dataset,
+            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+            std::unordered_map<size_t, size_t> &out_T,
+            std::unordered_map<size_t, size_t> &out_answer
+            );
+
+    /**
+     * train_ratioによらず、すべてのデータを読み込む
+     * cache済みの場合には、それをよみこむ
+     * @param dataset
+     * @param S
+     * @param out_groups
+     * @param out_nodes
+     */
+    static void loadAll(
+            Dataset dataset,
+            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+            std::unordered_map<size_t, std::vector<size_t>> &out_groups,
+            std::unordered_map<size_t, std::vector<size_t>> &out_nodes
+            );
+
     static void loadS(
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &S,
@@ -49,12 +71,15 @@ public:
     template<class SparseMatrix>
     static void loadSparseMatrix(const std::string &filename, SparseMatrix &mat);
 
+    static void clean(DatasetLoader::UGraph &graph,
+                      std::unordered_map<size_t, std::vector<size_t>> &groups,
+                      std::unordered_map<size_t, std::vector<size_t>> &nodes);
 
     static void clean(DatasetLoader::UGraph &graph,
                       std::unordered_map<size_t, std::vector<size_t>> &groups,
                       std::unordered_map<size_t, std::vector<size_t>> &nodes,
                       std::unordered_map<size_t, size_t> &out_T,
-                      std::unordered_map<size_t, size_t> &out_answerr);
+                      std::unordered_map<size_t, size_t> &out_answer);
 };
 
 

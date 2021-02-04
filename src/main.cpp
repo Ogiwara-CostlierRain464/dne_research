@@ -7,6 +7,10 @@
 #include "original_dne.h"
 #include "dataset_repo.h"
 #include <boost/graph/graphviz.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/map.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -521,5 +525,6 @@ int main(int argc, char* argv[]){
     Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
     std::unordered_map<size_t, size_t> T;
     std::unordered_map<size_t, size_t> answer;
-    DatasetRepo::loadS(DatasetRepo::YouTube, S, T, answer);
+
+    DatasetRepo::load(DatasetRepo::BlogCatalog, S, T, answer);
 }

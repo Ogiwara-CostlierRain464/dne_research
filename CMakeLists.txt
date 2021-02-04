@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS src/*.h)
 
-find_package(Boost 1.40)
+find_package(Boost 1.40 COMPONENTS system serialization graph REQUIRED)
 add_subdirectory(third_party/glog)
 add_subdirectory(third_party/gflags)
 
@@ -94,5 +94,10 @@ add_executable(tests
         ${PROJECT_SOURCES}
         ${PROJECT_HEADERS}
 )
-target_link_libraries(tests gtest_main gflags glog)
+target_link_libraries(tests
+        gtest_main
+        gflags
+        glog
+        ${Boost_LIBRARIES}
+)
 add_test(NAME example_test COMMAND tests)

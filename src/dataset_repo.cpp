@@ -4,6 +4,14 @@
 #include <unistd.h>
 #include <glog/logging.h>
 #include <iostream>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/vector.hpp>
 
 using namespace std;
 using namespace boost;
@@ -14,9 +22,45 @@ void DatasetRepo::load(
         DatasetLoader::UGraph &out_graph,
         std::unordered_map<size_t, size_t> &out_T,
         std::unordered_map<size_t, size_t> &out_answer) {
+    assert(false);
 
     std::unordered_map<size_t, std::vector<size_t>> groups;
     std::unordered_map<size_t, std::vector<size_t>> nodes;
+
+
+    string data_path;
+    switch (dataset) {
+        case Karate:
+            data_path = "../dataset/karate/";
+            break;
+        case YouTube:
+            data_path = "../dataset/youtube/";
+            break;
+        case Flickr:
+            data_path = "../dataset/flickr/";
+            break;
+        case Wiki:
+            data_path = "../dataset/wiki/";
+            break;
+        case BlogCatalog:
+            data_path = "../dataset/blogcatalog/";
+    }
+
+    if(access((data_path + "S.matrix").c_str(), F_OK) != -1){
+        // 保存済みのデータを返す
+        assert(access((data_path + "groups.map").c_str(), F_OK) != -1);
+        assert(access((data_path + "nodes.map").c_str(), F_OK) != -1);
+
+    }
+
+
+
+    // この段階で、保存されたデータはもうとれないか？
+    // fileからgraphとclassを取得、それぞれcleanにする、Sを作る
+    // この時点で完成しているはず
+
+    // /karate 下に S.matrix  groups.map  nodes.map
+
     switch (dataset) {
         case Dataset::Karate: {
             auto N = 34;
@@ -71,12 +115,176 @@ void DatasetRepo::load(
 
 }
 
+void DatasetRepo::load(DatasetRepo::Dataset dataset,
+                       Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+                       std::unordered_map<size_t, size_t> &out_T,
+                       std::unordered_map<size_t, size_t> &out_answer) {
+    std::unordered_map<size_t, std::vector<size_t>> groups;
+    std::unordered_map<size_t, std::vector<size_t>> nodes;
+    loadAll(dataset, out_S, groups, nodes);
+
+    out_T = std::unordered_map<size_t, size_t>();
+
+    for(auto & group : groups){
+        auto group_size = group.second.size();
+        assert(group_size >= 1);
+
+        auto sample_count = ceil(group_size * FLAGS_train_ratio);
+        assert(sample_count >= 1);
+
+        for(size_t j = 0; j < sample_count; ++j){
+            auto node_in_i = group.second[j];
+            out_T[node_in_i] = group.first;
+        }
+    }
+
+    out_answer = std::unordered_map<size_t, size_t>();
+    out_answer.reserve(nodes.size());
+    for(auto & group : groups){
+        for(auto node_id : group.second){
+            out_answer[node_id] = group.first;
+        }
+    }
+}
+
+
+
+void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
+                          Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+                          std::unordered_map<size_t, std::vector<size_t>> &out_groups,
+                          std::unordered_map<size_t, std::vector<size_t>> &out_nodes) {
+
+    string data_path;
+    switch (dataset) {
+        case Karate:
+            data_path = "../dataset/karate/";
+            break;
+        case YouTube:
+            data_path = "../dataset/youtube/";
+            break;
+        case Flickr:
+            data_path = "../dataset/flickr/";
+            break;
+        case Wiki:
+            data_path = "../dataset/wiki/";
+            break;
+        case BlogCatalog:
+            data_path = "../dataset/blogcatalog/";
+    }
+
+    if(access((data_path + "S.matrix").c_str(), F_OK) != -1){
+        // 保存済みのデータを返す
+        assert(access((data_path + "groups.map").c_str(), F_OK) != -1);
+        assert(access((data_path + "nodes.map").c_str(), F_OK) != -1);
+
+        loadSparseMatrix(data_path + "S.matrix", out_S);
+        std::ifstream groups_ifs(data_path + "groups.map");
+        assert(groups_ifs.is_open());
+        boost::archive::text_iarchive groups_ia(groups_ifs);
+        groups_ia >> out_groups;
+
+        std::ifstream nodes_ifs(data_path + "nodes.map");
+        assert(nodes_ifs.is_open());
+        boost::archive::text_iarchive nodes_ia(nodes_ifs);
+        nodes_ia >> out_nodes;
+    }else{
+        DatasetLoader::UGraph graph;
+        // データを取得して、cleanして、保存
+        switch (dataset) {
+            case Dataset::Karate: {
+                auto N = 34;
+                auto C = 2;
+                DatasetLoader::from_my_format(
+                        "../dataset/karate.txt",
+                        N, C, graph, out_groups, out_nodes);
+            }
+                break;
+            case Dataset::Flickr: {
+                auto N = 80513;
+                auto C = 195;
+                DatasetLoader::from_my_format(
+                        "../dataset/flickr.txt",
+                        N, C, graph, out_groups, out_nodes);
+            }
+                break;
+            case Dataset::YouTube: {
+                auto N = 1138499;
+                auto C = 47;
+                DatasetLoader::from_my_format("../dataset/youtube.txt",
+                                              N, C, graph, out_groups, out_nodes);
+            }
+                break;
+            case Dataset::BlogCatalog: {
+                // Edge Number: 667932
+                // x64.77 density. (or 32?)
+                auto N = 10312;
+                auto C = 39;
+                DatasetLoader::from_my_format("../dataset/blogcatalog.txt",
+                                              N, C, graph, out_groups, out_nodes);
+            }
+                break;
+            case Dataset::Wiki: {
+                // Edge Number: 17981
+                // C = 16
+                auto N = 2405;
+                auto C = 17;
+                DatasetLoader::from_separate_format("../dataset/Wiki_category.txt",
+                                                    "../dataset/Wiki_edgelist.txt",
+                                                    N, C, graph, out_groups, out_nodes);
+            }
+                break;
+            default: {
+                assert(false);
+            }
+        }
+
+        clean(graph, out_groups, out_nodes);
+
+        // Sを計算して保存
+
+        auto node_num = out_nodes.size();
+
+        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> A(node_num, node_num);
+        typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+        IndexMap index = get(boost::vertex_index, graph);
+        typedef boost::graph_traits<UGraph> GraphTraits;
+        typename GraphTraits::edge_iterator ei, ei_end;
+        for(tie(ei, ei_end) = edges(graph); ei != ei_end; ++ei){
+            auto sur = index[boost::source(*ei, graph)];
+            auto tar = index[boost::target(*ei, graph)];
+
+            A.coeffRef(sur, tar) = 1.0;
+            A.coeffRef(tar, sur) = 1.0;
+        }
+        assert(A.isApprox(A.transpose()));
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < node_num; ++i){
+            A.row(i) /= A.row(i).sum();
+        }
+
+        out_S = (A + A * A) / 2;
+        saveSparseMatrix(data_path + "S.matrix", out_S);
+
+        std::ofstream groups_ofs(data_path + "groups.map");
+        boost::archive::text_oarchive groups_oa(groups_ofs);
+        groups_oa << out_groups;
+
+        std::ofstream nodes_ofs(data_path + "nodes.map");
+        boost::archive::text_oarchive nodes_oa(nodes_ofs);
+        nodes_oa << out_nodes;
+    }
+}
+
+
 void DatasetRepo::clean(
         UGraph &graph,
         std::unordered_map<size_t, std::vector<size_t>> &groups,
         std::unordered_map<size_t, std::vector<size_t>> &nodes,
         std::unordered_map<size_t, size_t> &out_T,
         std::unordered_map<size_t, size_t> &out_answer) {
+    assert(false);
+
 
 
     // まずデータをきれいにした後に、値を返す必要がある。
@@ -127,6 +335,8 @@ void DatasetRepo::clean(
     }
 
     std::cout << "After erase 2" << std::endl;
+
+    // ここまではtrain_ratioに依存しない
 
     // 実は上のアルゴリズムでは孤立したnodeを完全には消せていない。しかしながら、多少のずさんさは許されるであろう。
     out_T = std::unordered_map<size_t, size_t>();
@@ -181,6 +391,8 @@ void DatasetRepo::loadMatrix(const string &filename, Matrix &mat) {
 void
 DatasetRepo::loadS(DatasetRepo::Dataset dataset, Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
                    std::unordered_map<size_t, size_t> &out_T, std::unordered_map<size_t, size_t> &out_answer) {
+    assert(false);
+
     UGraph g;
     load(dataset, g, out_T, out_answer);
 
@@ -287,4 +499,66 @@ void DatasetRepo::loadSparseMatrix(const string &filename, SparseMatrix &mat) {
 
     mat.finalize();
     in.close();
+}
+
+void DatasetRepo::clean(UGraph &graph,
+                        std::unordered_map<size_t, std::vector<size_t>> &groups,
+                        std::unordered_map<size_t, std::vector<size_t>> &nodes) {
+
+    for(size_t v = 0; v < nodes.size(); ++v){
+        // まずは、二つ以上のclassが割り当てられたnodeを削除
+        if(nodes[v].size() >= 2){
+            clear_vertex(v, graph);
+            remove_vertex(v, graph);
+
+            for(auto v_join_group: nodes[v]){
+                assert(std::count(groups[v_join_group].begin(),groups[v_join_group].end(), v ) != 0);
+
+                groups[v_join_group].erase(std::remove(groups[v_join_group].begin(), groups[v_join_group].end(), v), groups[v_join_group].end());
+            }
+            nodes.erase(v);
+        }
+        // 次に、一つもクラスが割り当てられていないnodeを削除
+        if(nodes[v].empty()){
+            clear_vertex(v, graph);
+            remove_vertex(v, graph);
+        }
+    }
+
+    // 最後に、(クラスが割り当てられていても)孤立したnodeを削除
+    typedef boost::graph_traits<UGraph> GraphTraits;
+    typename GraphTraits::vertex_iterator v, v_end;
+    for(boost::tie(v, v_end) = boost::vertices(graph); v != v_end ; ++v){
+        auto iter_pair = boost::out_edges(*v, graph);
+        auto num_edges = std::distance(iter_pair.first, iter_pair.second);
+        if(num_edges == 0){
+            // もし本当に0なら、clean_vertexをする必要はない。
+            boost::remove_vertex(*v, graph);
+
+            for(auto v_join_group: nodes[*v]){
+                groups[v_join_group].erase(
+                        std::remove(groups[v_join_group].begin(),groups[v_join_group].end(), *v),
+                        groups[v_join_group].end()
+                );
+            }
+            nodes.erase(*v);
+        }
+    }
+
+    // groups, nodesそれぞれに対し、空になったentryは削除
+    for(auto it = groups.begin(); it != groups.end();){
+        if(it->second.empty()){
+            it = groups.erase(it);
+        }else{
+            ++it;
+        }
+    }
+
+    for(auto it = nodes.begin(); it != nodes.end();){
+        if(it->second.empty()){
+            it = nodes.erase(it);
+        }else{
+            ++it;
+        }
+    }
 }
