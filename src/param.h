@@ -3,15 +3,43 @@
 
 #include <gflags/gflags.h>
 
-DEFINE_string(dataset, "karate", "Dataset to ML");
-DEFINE_double(train_ratio, 0.5, "Train data ratio");
-DEFINE_uint32(m, 10, "dimension of embedding");
-DEFINE_uint32(T_in, 5, "T_in");
-DEFINE_uint32(T_out, 10, "T_out");
-DEFINE_double(tau, 1.0, "τ");
-DEFINE_double(lambda, 1.0, "λ");
-DEFINE_double(mu, 0.01, "μ");
-DEFINE_double(rho, 0.01, "ρ");
+
+namespace fLD{
+  extern double FLAGS_ab;
+  extern double FLAGS_train_ratio;
+  extern double FLAGS_tau;
+  extern double FLAGS_lambda;
+  extern double FLAGS_mu;
+  extern double FLAGS_rho;
+}
+
+using fLD::FLAGS_ab;
+using fLD::FLAGS_train_ratio;
+using fLD::FLAGS_tau;
+using fLD::FLAGS_lambda;
+using fLD::FLAGS_mu;
+using fLD::FLAGS_rho;
+
+namespace fLS{
+  extern clstring& FLAGS_dataset;
+}
+
+using fLS::FLAGS_dataset;
+
+namespace fLU{
+  extern gflags::uint32 FLAGS_m;
+  extern gflags::uint32 FLAGS_T_in;
+  extern gflags::uint32 FLAGS_T_out;
+}
+
+using fLU::FLAGS_m;
+using fLU::FLAGS_T_in;
+using fLU::FLAGS_T_out;
+
+
+
+
+
 
 
 #endif //DNE_PARAM_H

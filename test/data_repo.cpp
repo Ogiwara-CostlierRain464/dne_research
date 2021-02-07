@@ -35,7 +35,6 @@ TEST(DataRepo, clean){
     DatasetRepo::clean(g, groups, nodes, out_T, out_answer);
 
     EXPECT_EQ(num_vertices(g), 3);
-    EXPECT_EQ(num_vertices(g), 3);
     EXPECT_EQ(out_T[0], 0);
     EXPECT_EQ(out_T[1], 1);
     EXPECT_EQ(out_answer[2], 0);

@@ -11,6 +11,7 @@ void DatasetLoader::from_my_format(
         DatasetLoader::UGraph &out_graph,
         std::unordered_map<size_t, std::vector<size_t>> &out_groups,
         std::unordered_map<size_t, std::vector<size_t>> &out_nodes) {
+    // indexがはじまるポイントにきをつける！！！！！
     std::ifstream infile(file_name);
     assert(infile);
     typedef pair<int, int> Edge;

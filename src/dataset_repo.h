@@ -35,7 +35,8 @@ public:
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
             std::unordered_map<size_t, size_t> &out_T,
-            std::unordered_map<size_t, size_t> &out_answer
+            std::unordered_map<size_t, size_t> &out_answer,
+            size_t &out_class_num
             );
 
     /**
@@ -73,7 +74,8 @@ public:
 
     static void clean(DatasetLoader::UGraph &graph,
                       std::unordered_map<size_t, std::vector<size_t>> &groups,
-                      std::unordered_map<size_t, std::vector<size_t>> &nodes);
+                      std::unordered_map<size_t, std::vector<size_t>> &nodes,
+                      Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A);
 
     static void clean(DatasetLoader::UGraph &graph,
                       std::unordered_map<size_t, std::vector<size_t>> &groups,

@@ -1,11 +1,3 @@
-#include "dne.h"
-#include "real_dne.h"
-#include "propose_dne.h"
-#include "propose_dne2.h"
-#include "loader.h"
-#include "experiment_dne.h"
-#include "original_dne.h"
-#include "dataset_repo.h"
 #include <boost/graph/graphviz.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -13,518 +5,86 @@
 #include <boost/serialization/map.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-
-
-DEFINE_string(message, "Hello world!", "Message to print");
-DEFINE_bool(c, true, "Test message!");
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <Eigen/SVD>
+#include "dataset_repo.h"
+#include "model/raw_dne.h"
 
 namespace {
-  template <typename T>
-  double h_dis(std::vector<T> const &a,
-               std::vector<T> const &b){
-    assert(a.size() == b.size());
+  double h_dis(std::vector<size_t> const &answer,
+               std::vector<size_t> const &predict){
+    assert(answer.size() == predict.size());
     double result = 0;
-    for(size_t i = 0; i < a.size(); ++i){
-      if(a[i] != b[i]){
+    for(size_t i = 0; i < answer.size(); ++i){
+      if(answer[i] != predict[i]){
         result += 1;
       }
     }
-    return result / a.size();
-  }
 
-  void karate(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    auto N = 34;
-    auto C = 2;
-    from_txt("../dataset/karate.txt", N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 10;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.insert(sur, tar) = 1.0;
-      A.insert(tar, sur) = 1.0;
-    }
-
-//    std::cout << A << std::endl;
-
-    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-    #pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    DNE dne(A, T, N, M, C, L, 5);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void karate2(){
-      UGraph g;
-      std::unordered_map<size_t, size_t> T;
-      std::vector<size_t> answer;
-
-
-  }
-
-  void youtube(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    auto N = 1138499;
-    auto C = 47;
-    from_txt("../dataset/youtube.txt", N, C, 0.6, g, T, answer);
-    auto L = T.size();
-    auto M = 500;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.insert(sur, tar) = 1.0;
-    }
-
-//    A.makeCompressed();
-//    assert(A.isApprox(A.transpose()));
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    DNE dne(A, T, N, M, C, L, 5);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void flicker(){
-        UGraph g;
-        std::unordered_map<size_t, size_t> T;
-        std::vector<size_t> answer;
-
-        auto N = 80513;
-        auto C = 195;
-        from_txt("../dataset/flickr.txt", N, C, 0.6, g, T, answer);
-        auto L = T.size();
-        auto M = 500;
-        DNE::Sp A(N, N);
-
-        typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-        IndexMap index = get(boost::vertex_index, g);
-        typedef boost::graph_traits<UGraph> GraphTraits;
-        typename GraphTraits::edge_iterator ei, ei_end;
-        for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-            auto sur = index[boost::source(*ei, g)];
-            auto tar = index[boost::target(*ei, g)];
-
-            A.insert(sur, tar) = 1.0;
-        }
-
-//    A.makeCompressed();
-        assert(A.isApprox(A.transpose()));
-
-        #pragma omp parallel for
-        for(size_t i = 0; i < N; ++i){
-            A.row(i) /= A.row(i).sum();
-        }
-
-        DNE dne(A, T, N, M, C, L, 5);
-        Eigen::MatrixXd W, B;
-        dne.fit(W, B);
-
-        std::vector<size_t> predicted{};
-        predicted.reserve(N);
-        for(size_t n = 0; n < N; ++n){
-            Eigen::Index max_index;
-            (W.transpose() * B.col(n)).maxCoeff(&max_index);
-            predicted.push_back(max_index);
-        }
-
-        std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-    }
-
-  void catalog(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    // Edge Number: 667932
-    // x64.77 density. (or 32?)
-    auto N = 10312;
-    auto C = 39;
-    from_txt("../dataset/blogcatalog.txt", N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 128;
-    Eigen::SparseMatrix<double> A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.insert(sur, tar) = 1.0;
-    }
-
-//    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    DNE dne(A, T, N, M, C, L, 5);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void wiki(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    // Edge Number: 17981
-    // C = 16
-    auto N = 2405;
-    auto C = 17;
-    from_txt2("../dataset/Wiki_category.txt",
-              "../dataset/Wiki_edgelist.txt",
-              N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 128;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.coeffRef(sur, tar) = 1.0;
-      A.coeffRef(tar, sur) = 1.0;
-    }
-
-    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    DNE dne(A, T, N, M, C, L, 3);
-//    RealDNE dne(A, T, N, M, C, L, 10);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void propose(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    auto N = 34;
-    auto C = 2;
-    from_txt("../dataset/karate.txt", N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 20;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.insert(sur, tar) = 1.0;
-      A.insert(tar, sur) = 1.0;
-    }
-
-//    std::cout << A << std::endl;
-
-    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-    #pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    ProposeDNE2 dne(A, T, N, M, C, L, 2);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void propose2(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    // Edge Number: 17981
-    // C = 16
-    auto N = 2405;
-    auto C = 17;
-    from_txt2("../dataset/Wiki_category.txt",
-              "../dataset/Wiki_edgelist.txt",
-              N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 128;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.coeffRef(sur, tar) = 1.0;
-      A.coeffRef(tar, sur) = 1.0;
-    }
-
-//    std::cout << A << std::endl;
-
-    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-#pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    ProposeDNE2 dne(A, T, N, M, C, L, 1);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void experiment1(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    auto N = 34;
-    auto C = 2;
-    from_txt("../dataset/karate.txt", N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 10;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.insert(sur, tar) = 1.0;
-      A.insert(tar, sur) = 1.0;
-    }
-
-    assert(A.isApprox(A.transpose()));
-
-    // use row wise op
-#pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    OriginalDNE dne(A, T, N, M, C, L, 5);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
-  }
-
-  void experiment2(){
-    UGraph g;
-    std::unordered_map<size_t, size_t> T;
-    std::vector<size_t> answer;
-
-    // Edge Number: 17981
-    // C = 16
-    auto N = 2405;
-    auto C = 17;
-    from_txt2("../dataset/Wiki_category.txt",
-              "../dataset/Wiki_edgelist.txt",
-              N, C, 0.5, g, T, answer);
-    auto L = T.size();
-    auto M = 128;
-    DNE::Sp A(N, N);
-
-    typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-    IndexMap index = get(boost::vertex_index, g);
-    typedef boost::graph_traits<UGraph> GraphTraits;
-    typename GraphTraits::edge_iterator ei, ei_end;
-    for(tie(ei, ei_end) = edges(g); ei != ei_end; ++ei){
-      auto sur = index[boost::source(*ei, g)];
-      auto tar = index[boost::target(*ei, g)];
-
-      A.coeffRef(sur, tar) = 1.0;
-      A.coeffRef(tar, sur) = 1.0;
-    }
-//    std::cout << A << std::endl;
-
-    assert(A.isApprox(A.transpose()));
-
-
-    // use row wise op
-#pragma omp parallel for
-    for(size_t i = 0; i < N; ++i){
-      A.row(i) /= A.row(i).sum();
-    }
-
-    OriginalDNE dne(A, T, N, M, C, L, 1);
-    Eigen::MatrixXd W, B;
-    dne.fit(W, B);
-
-    std::vector<size_t> predicted{};
-    predicted.reserve(N);
-    for(size_t n = 0; n < N; ++n){
-      Eigen::Index max_index;
-      (W.transpose() * B.col(n)).maxCoeff(&max_index);
-      predicted.push_back(max_index);
-    }
-
-    std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
+    return result / answer.size();
   }
 }
 
 int main(int argc, char* argv[]){
-    // 実験を円滑に行うために、パラメータを受け取れるようにすべきである。
-    // それはともかく、元のDNE class自体がそうすべき？
-    // もうgflagsを導入するか～、glogもね
-    // glogではどうするか？とりあえず実験の取り方をもうちょっとは楽にしたい
-    // パラメータはコマンドラインから指定？で結果はすべて出力
-    // とはいえど、すぐに実装はかえたいよね
-    // 平均とかどうとるのさ、プログラム中でfor回していくとかだろうねえ
+  gflags::SetUsageMessage("DNE experiment");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     FLAGS_log_dir = R"(C:\Windows\Temp\DNE)";
 #endif
+  google::InitGoogleLogging(argv[0]);
 
-    google::InitGoogleLogging(argv[0]);
+  std::cout << "OpenMP threads: " <<  Eigen::nbThreads() << std::endl;
+
+  DatasetRepo::Dataset dataset = FLAGS_dataset == "karate"
+    ? DatasetRepo::Karate
+    : FLAGS_dataset == "youtube"
+      ? DatasetRepo::YouTube
+      : FLAGS_dataset == "flickr"
+        ? DatasetRepo::Flickr
+        : FLAGS_dataset == "wiki"
+          ? DatasetRepo::Wiki
+          : DatasetRepo::BlogCatalog;
 
 
+  LOG(INFO) << "dataset: " << FLAGS_dataset;
+  LOG(INFO) << "train_ratio: " << FLAGS_train_ratio;
+  LOG(INFO) << "m: " << FLAGS_m;
+  LOG(INFO) << "T_in: " << FLAGS_T_in;
+  LOG(INFO) << "T_out: " << FLAGS_T_out;
+  LOG(INFO) << "tau: " << FLAGS_tau;
+  LOG(INFO) << "lambda: " << FLAGS_lambda;
+  LOG(INFO) << "mu: " << FLAGS_mu;
+  LOG(INFO) << "rho: " << FLAGS_rho;
 
+  Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
+  std::unordered_map<size_t, size_t> T;
+  std::unordered_map<size_t, size_t> answer;
+  size_t C;
 
-#ifdef DEBUG
-  printf("This is DEBUG mode.\n");
-#endif
+  DatasetRepo::load(dataset, S, T, answer, C);
 
-  std::cout << FLAGS_message << std::endl;
-  std::cout << Eigen::nbThreads() << std::endl;
+  RawDNE dne(S,T,C);
+  Eigen::MatrixXd W,B;
+  dne.fit(W,B);
 
-//  catalog();
-//  youtube();
-//  karate();
-//  wiki();
-//  propose();
-//  propose2();
+  auto N = S.rows();
 
-//  experiment1();
-//  experiment2();
-//    flicker();
-    Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
-    std::unordered_map<size_t, size_t> T;
-    std::unordered_map<size_t, size_t> answer;
+  std::vector<size_t> predicted{};
+  predicted.reserve(N);
+  for(size_t n = 0; n < N; ++n){
+    Eigen::Index max_index;
+    (W.transpose() * B.col(n)).maxCoeff(&max_index);
+    predicted.push_back(max_index);
+  }
 
-    DatasetRepo::load(DatasetRepo::Flickr, S, T, answer);
+  std::map<size_t, size_t> ordered_ans(answer.begin(), answer.end());
+  std::vector<size_t> ans_vec;
+  for(auto it: ordered_ans){
+    ans_vec.push_back(it.second);
+  }
+
+  std::cout << "H-dis: " << h_dis(ans_vec, predicted) << std::endl;
+
 }

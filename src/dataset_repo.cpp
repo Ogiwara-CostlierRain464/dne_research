@@ -118,7 +118,8 @@ void DatasetRepo::load(
 void DatasetRepo::load(DatasetRepo::Dataset dataset,
                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
                        std::unordered_map<size_t, size_t> &out_T,
-                       std::unordered_map<size_t, size_t> &out_answer) {
+                       std::unordered_map<size_t, size_t> &out_answer,
+                       size_t &out_class_num) {
     std::unordered_map<size_t, std::vector<size_t>> groups;
     std::unordered_map<size_t, std::vector<size_t>> nodes;
     loadAll(dataset, out_S, groups, nodes);
@@ -145,6 +146,8 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
             out_answer[node_id] = group.first;
         }
     }
+
+    out_class_num = groups.size();
 }
 
 
@@ -238,31 +241,10 @@ void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
             }
         }
 
-        clean(graph, out_groups, out_nodes);
+        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> A;
+        clean(graph, out_groups, out_nodes, A);
 
         // Sを計算して保存
-
-        auto node_num = out_nodes.size();
-
-        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> A(node_num, node_num);
-        typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
-        IndexMap index = get(boost::vertex_index, graph);
-        typedef boost::graph_traits<UGraph> GraphTraits;
-        typename GraphTraits::edge_iterator ei, ei_end;
-        for(tie(ei, ei_end) = edges(graph); ei != ei_end; ++ei){
-            auto sur = index[boost::source(*ei, graph)];
-            auto tar = index[boost::target(*ei, graph)];
-
-            A.coeffRef(sur, tar) = 1.0;
-            A.coeffRef(tar, sur) = 1.0;
-        }
-        assert(A.isApprox(A.transpose()));
-
-        #pragma omp parallel for
-        for(size_t i = 0; i < node_num; ++i){
-            A.row(i) /= A.row(i).sum();
-        }
-
         out_S = (A + A * A) / 2;
         saveSparseMatrix(data_path + "S.matrix", out_S);
 
@@ -503,7 +485,8 @@ void DatasetRepo::loadSparseMatrix(const string &filename, SparseMatrix &mat) {
 
 void DatasetRepo::clean(UGraph &graph,
                         std::unordered_map<size_t, std::vector<size_t>> &groups,
-                        std::unordered_map<size_t, std::vector<size_t>> &nodes) {
+                        std::unordered_map<size_t, std::vector<size_t>> &nodes,
+                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A) {
 
     for(size_t v = 0; v < nodes.size(); ++v){
         // まずは、二つ以上のclassが割り当てられたnodeを削除
@@ -561,4 +544,101 @@ void DatasetRepo::clean(UGraph &graph,
             ++it;
         }
     }
+
+  for(auto it = groups.begin(); it != groups.end(); ++it){
+    assert(!it->second.empty());
+  }
+
+  for(auto it = nodes.begin(); it != nodes.end(); ++it) {
+    assert(it->second.size() == 1);
+  }
+
+  // 全てのclass、全てのnodeに対するindexの再割り当てを行おう
+  // node 1,3,5にはそれぞれ1,2,3を
+  // class 1,2,4にはそれぞれ1,2,3を
+  // これは必要か？問題の単純化には欠かせなさそう、もっとも何の意味があるかわからんが
+  // これにより、node id は連続になり、group id もどうようにgroups.size() == 最後のclass idと同じに
+  // nodes: 0: {}
+
+  // さて、やはりA行列を作る前に、graphのnode_idの書き換えは必要
+
+  std::unordered_map<size_t, size_t> node_id_mapping;
+  std::unordered_map<size_t, size_t> group_id_mapping;
+
+  std::unordered_map<size_t, std::vector<size_t>> true_nodes;
+  std::unordered_map<size_t, std::vector<size_t>> true_groups;
+
+
+  std::map<size_t, std::vector<size_t>> ordered_nodes(nodes.begin(), nodes.end());
+  std::map<size_t, std::vector<size_t>> ordered_groups(groups.begin(), groups.end());
+
+  // mappingを取得して、graphのidを書き換えなきゃ！
+
+  size_t node_id_count = 0;
+  for(const auto& it: ordered_nodes){
+    node_id_mapping.emplace(it.first, node_id_count);
+    true_nodes.emplace(node_id_count, it.second);
+    ++node_id_count;
+  }
+
+  size_t group_id_count = 0;
+  for(const auto& it: ordered_groups){
+    group_id_mapping.emplace(it.first, group_id_count);
+    true_groups.emplace(group_id_count, it.second);
+    ++group_id_count;
+  }
+
+  // mappingの取得後、それぞれ書き直す
+  for(auto& it: true_nodes){
+    std::vector<size_t> clean_vector;
+    clean_vector.resize(it.second.size());
+
+    std::transform(
+      it.second.begin(),
+      it.second.end(),
+      clean_vector.begin(), [&group_id_mapping](size_t group_id){
+        return group_id_mapping[group_id];
+      });
+
+    it.second = clean_vector;
+  }
+
+  for(auto& it: true_groups){
+    std::vector<size_t> clean_vector;
+    clean_vector.resize(it.second.size());
+
+    std::transform(
+      it.second.begin(),
+      it.second.end(),
+      clean_vector.begin(), [&node_id_mapping](size_t node_id){
+        return node_id_mapping[node_id];
+      });
+
+    it.second = clean_vector;
+  }
+
+  groups = true_groups;
+  nodes = true_nodes;
+
+  // ここで、単にAを作るときにだけmappingを施せばよいと気が付いた。
+  // なのでここでAを作ろうか
+  auto node_num = true_nodes.size();
+  out_A = Eigen::SparseMatrix<double, 0, std::ptrdiff_t>(node_num, node_num);
+  typedef boost::property_map<UGraph, boost::vertex_index_t>::type IndexMap;
+  IndexMap index = get(boost::vertex_index, graph);
+  typedef boost::graph_traits<UGraph> GraphTraits;
+  typename GraphTraits::edge_iterator ei, ei_end;
+  for(tie(ei, ei_end) = edges(graph); ei != ei_end; ++ei){
+    auto sur = node_id_mapping[index[boost::source(*ei, graph)]];
+    auto tar = node_id_mapping[index[boost::target(*ei, graph)]];
+
+    out_A.coeffRef(sur, tar) = 1.0;
+    out_A.coeffRef(tar, sur) = 1.0;
+  }
+  assert(out_A.isApprox(out_A.transpose()));
+
+  #pragma omp parallel for
+  for(size_t i = 0; i < node_num; ++i){
+    out_A.row(i) /= out_A.row(i).sum();
+  }
 }
