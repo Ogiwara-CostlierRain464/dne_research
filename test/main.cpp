@@ -133,6 +133,12 @@ TEST_F(Unit, sa){
     EXPECT_EQ(a[2].empty(), true);
 }
 
+TEST_F(Unit, sort_by_key){
+  std::unordered_map<size_t, std::vector<size_t>> a = { {1, {2,3}}, {0, {3,4}} };
+  std::map<size_t, std::vector<size_t>> b(a.begin(), a.end());
+  EXPECT_EQ(b[0][0], 3);
+}
+
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

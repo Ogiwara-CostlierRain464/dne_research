@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
 
   Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
   std::unordered_map<size_t, size_t> T;
-  std::unordered_map<size_t, size_t> answer;
+  std::vector<size_t> answer;
   size_t C;
 
   DatasetRepo::load(dataset, S, T, answer, C);
@@ -79,12 +79,6 @@ int main(int argc, char* argv[]){
     predicted.push_back(max_index);
   }
 
-  std::map<size_t, size_t> ordered_ans(answer.begin(), answer.end());
-  std::vector<size_t> ans_vec;
-  for(auto it: ordered_ans){
-    ans_vec.push_back(it.second);
-  }
-
-  std::cout << "H-dis: " << h_dis(ans_vec, predicted) << std::endl;
+  std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
 
 }

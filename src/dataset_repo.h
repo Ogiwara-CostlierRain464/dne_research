@@ -17,25 +17,11 @@ public:
         BlogCatalog
     };
 
-    /**
-     * [dataset]のデータを読み込み、out_パラメータに結果を格納する。
-     * @param dataset
-     * @param train_ratio
-     * @param out_graph
-     * @param out_T
-     * @param out_answer
-     */
-    static void load(
-            Dataset dataset,
-            DatasetLoader::UGraph &out_graph,
-            std::unordered_map<size_t, size_t> &out_T,
-            std::unordered_map<size_t, size_t> &out_answer);
-
     static void load(
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
             std::unordered_map<size_t, size_t> &out_T,
-            std::unordered_map<size_t, size_t> &out_answer,
+            std::vector<size_t> &out_answer,
             size_t &out_class_num
             );
 
@@ -50,15 +36,9 @@ public:
     static void loadAll(
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
-            std::unordered_map<size_t, std::vector<size_t>> &out_groups,
-            std::unordered_map<size_t, std::vector<size_t>> &out_nodes
+            std::vector<std::vector<size_t>> &out_groups, // {group_id: [ node_ids ]}
+            std::vector<size_t> &out_nodes // {node_id:  group_id }
             );
-
-    static void loadS(
-            Dataset dataset,
-            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &S,
-            std::unordered_map<size_t, size_t> &out_T,
-            std::unordered_map<size_t, size_t> &out_answer);
 
     template<class Matrix>
     static void saveMatrix(const std::string &filename, const Matrix &mat);
@@ -73,15 +53,11 @@ public:
     static void loadSparseMatrix(const std::string &filename, SparseMatrix &mat);
 
     static void clean(DatasetLoader::UGraph &graph,
-                      std::unordered_map<size_t, std::vector<size_t>> &groups,
-                      std::unordered_map<size_t, std::vector<size_t>> &nodes,
+                      std::unordered_map<size_t, std::vector<size_t>> &dirty_groups,
+                      std::unordered_map<size_t, std::vector<size_t>> &dirty_nodes,
+                      std::vector<std::vector<size_t>> &out_groups,
+                      std::vector<size_t> &out_nodes,
                       Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A);
-
-    static void clean(DatasetLoader::UGraph &graph,
-                      std::unordered_map<size_t, std::vector<size_t>> &groups,
-                      std::unordered_map<size_t, std::vector<size_t>> &nodes,
-                      std::unordered_map<size_t, size_t> &out_T,
-                      std::unordered_map<size_t, size_t> &out_answer);
 };
 
 
