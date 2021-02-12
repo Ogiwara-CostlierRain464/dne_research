@@ -19,6 +19,7 @@ public:
 
     static void load(
             Dataset dataset,
+            double train_ratio,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
             std::unordered_map<size_t, size_t> &out_T,
             std::vector<size_t> &out_answer,
@@ -40,11 +41,6 @@ public:
             std::vector<size_t> &out_nodes // {node_id:  group_id }
             );
 
-    template<class Matrix>
-    static void saveMatrix(const std::string &filename, const Matrix &mat);
-
-    template<class Matrix>
-    static void loadMatrix(const std::string &filename, Matrix &mat);
 
     template<class SparseMatrix>
     static void saveSparseMatrix(const std::string &filename, const SparseMatrix &mat);

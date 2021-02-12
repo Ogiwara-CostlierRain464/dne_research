@@ -10,3 +10,6 @@
 [submodule "third_party/glog"]
 	path = third_party/glog
 	url = git@github.com:google/glog.git
+[submodule "third_party/libpopcnt"]
+	path = third_party/libpopcnt
+	url = git@github.com:kimwalisch/libpopcnt.git

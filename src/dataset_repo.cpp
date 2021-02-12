@@ -1,6 +1,5 @@
 #include "dataset_repo.h"
 #include <fstream>
-#include "param.h"
 #include <unistd.h>
 #include <glog/logging.h>
 #include <iostream>
@@ -18,6 +17,7 @@ using namespace boost;
 using UGraph = DatasetLoader::UGraph;
 
 void DatasetRepo::load(DatasetRepo::Dataset dataset,
+                       double train_ratio,
                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
                        std::unordered_map<size_t, size_t> &out_T,
                        std::vector<size_t> &out_answer,
@@ -32,7 +32,7 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
       auto group_size = groups[i].size();
       assert(group_size >= 1);
 
-      auto sample_count = ceil(group_size * FLAGS_train_ratio);
+      auto sample_count = ceil(group_size * train_ratio);
       assert(sample_count >= 1);
 
       for(size_t j = 0; j < sample_count; ++j){
@@ -155,29 +155,6 @@ void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
         boost::archive::text_oarchive nodes_oa(nodes_ofs);
         nodes_oa << out_nodes;
     }
-}
-
-template<class Matrix>
-void DatasetRepo::saveMatrix(const string &filename, const Matrix &mat) {
-    ofstream out(filename, ios::out | ios::binary | ios::trunc);
-    assert(out.is_open());
-    typename Matrix::Index rows=mat.rows(), cols=mat.cols();
-    out.write(reinterpret_cast<char*>(&rows), sizeof(typename Matrix::Index));
-    out.write(reinterpret_cast<char*>(&cols), sizeof(typename Matrix::Index));
-    out.write(reinterpret_cast<const char*>(mat.data()), rows*cols*static_cast<typename Matrix::Index>(sizeof(typename Matrix::Scalar)) );
-    out.close();
-}
-
-template<class Matrix>
-void DatasetRepo::loadMatrix(const string &filename, Matrix &mat) {
-    ifstream in(filename, ios::in | ios::binary);
-    assert(in.is_open());
-    typename Matrix::Index rows=0, cols=0;
-    in.read(reinterpret_cast<char*>(&rows),sizeof(typename Matrix::Index));
-    in.read(reinterpret_cast<char*>(&cols),sizeof(typename Matrix::Index));
-    mat.resize(rows, cols);
-    in.read(reinterpret_cast<char*>(mat.data()), rows*cols*static_cast<typename Matrix::Index>(sizeof(typename Matrix::Scalar)) );
-    in.close();
 }
 
 template<class SparseMatrix>

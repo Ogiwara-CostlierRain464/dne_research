@@ -7,7 +7,7 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fopenmp")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fopenmp -march=native")
 
 project(DNE)
 
@@ -42,6 +42,8 @@ target_link_libraries(
 )
 
 add_subdirectory(third_party/json)
+add_subdirectory(third_party/libpopcnt)
+
 
 enable_testing()
 

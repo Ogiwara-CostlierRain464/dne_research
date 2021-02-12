@@ -4,7 +4,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
-#include "../param.h"
+#include "params.h"
 
 struct RawDNE {
     typedef std::unordered_map<size_t, size_t> TrainLabel;
@@ -13,22 +13,24 @@ struct RawDNE {
     Sp const &S;
     TrainLabel  const &T;
     size_t const C;
+    Params const params;
 
     explicit RawDNE(
             Sp const &S_,
             TrainLabel const &T_,
-            size_t const C_):
-    S(S_), T(T_), C(C_){
+            size_t const C_,
+            Params const params_):
+    S(S_), T(T_), C(C_), params(params_){
     }
 
     void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
       srand(time(nullptr));
-      W = Eigen::MatrixXd::Random(FLAGS_m, C);
-      B = Eigen::MatrixXd::Random(FLAGS_m, S.rows());
+      W = Eigen::MatrixXd::Random(params.m, C);
+      B = Eigen::MatrixXd::Random(params.m, S.rows());
 
-      for(size_t out = 1; out <= FLAGS_T_out; ++out){
+      for(size_t out = 1; out <= params.T_out; ++out){
 
-          for(size_t in = 1; in <= FLAGS_T_in; ++in){
+          for(size_t in = 1; in <= params.T_in; ++in){
             eq11(W, B);
           }
           eq13(B,W);
@@ -38,8 +40,8 @@ struct RawDNE {
 private:
    void WO(Eigen::MatrixXd const &W,
            Eigen::MatrixXd &outWO){
-      assert(W.rows() == FLAGS_m and W.cols() == C);
-      outWO = Eigen::MatrixXd::Zero(FLAGS_m, S.rows());
+      assert(W.rows() == params.m and W.cols() == C);
+      outWO = Eigen::MatrixXd::Zero(params.m, S.rows());
 
       Eigen::VectorXd sum_mc = W.rowwise().sum();
       for(auto &iter: T){
@@ -54,32 +56,32 @@ private:
   void eq11(Eigen::MatrixXd const &W,
             Eigen::MatrixXd &B){
     auto N = S.rows();
-    assert(B.rows() == FLAGS_m and B.cols() == N);
-    assert(W.rows() == FLAGS_m and W.cols() == C);
+    assert(B.rows() == params.m and B.cols() == N);
+    assert(W.rows() == params.m and W.cols() == C);
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd dLB = -B * S
-      + FLAGS_lambda * wo
-      + FLAGS_mu * (B * B.transpose() * B)
-      + FLAGS_rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + params.lambda * wo
+      + params.mu * (B * B.transpose() * B)
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
     Eigen::MatrixXd cf;
-    CF(FLAGS_tau * B - dLB, B, cf);
+    CF(params.tau * B - dLB, B, cf);
     sgn(cf, B);
   }
 
   void eq13(Eigen::MatrixXd const &B, Eigen::MatrixXd &outW){
-    assert(B.rows() == FLAGS_m and B.cols() == S.rows());
+    assert(B.rows() == params.m and B.cols() == S.rows());
 
-    outW = Eigen::MatrixXd::Zero(FLAGS_m, C);
-    Eigen::VectorXd b_sum = Eigen::VectorXd::Zero(FLAGS_m);
+    outW = Eigen::MatrixXd::Zero(params.m, C);
+    Eigen::VectorXd b_sum = Eigen::VectorXd::Zero(params.m);
 
     for(size_t i = 0; i < C; ++i){
       b_sum += B.col(i);
     }
 
     for(size_t c = 0; c < C; ++c){
-      Eigen::VectorXd sum_1 = Eigen::VectorXd::Zero(FLAGS_m);
+      Eigen::VectorXd sum_1 = Eigen::VectorXd::Zero(params.m);
       for(auto &iter: T){
         auto i = iter.first;
         if(T.at(i) == c){
@@ -102,7 +104,7 @@ private:
   static void CF(Eigen::MatrixXd const &x,
                  Eigen::MatrixXd const &y,
                  Eigen::MatrixXd &out){
-    out = (x.array()).select(y, x);
+    out = (x.array() == 0).select(y, x);
   }
 
 };
