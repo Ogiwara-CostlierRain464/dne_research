@@ -3,6 +3,9 @@
 
 #include <Eigen/Core>
 
+void binary_mult_self(const Eigen::MatrixXd &B,
+                      Eigen::MatrixXd &outB_Bt);
+
 void binary_mult(const Eigen::MatrixXd &A,
                  const Eigen::MatrixXd &B,
                  Eigen::MatrixXd &outC);

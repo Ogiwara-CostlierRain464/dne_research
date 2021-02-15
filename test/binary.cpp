@@ -69,33 +69,54 @@ TEST(Binary, OpenMP_tutorial){
 }
 
 TEST(Binary, my){
-  Eigen::MatrixXd B(3000,10000);
+  Eigen::MatrixXd B(6000, 10000);
   B.setRandom();
   B = B.unaryExpr([](float x){ return 2. * (x>=0) - 1.; });
 
-  Eigen::MatrixXd C;
-
   std::chrono::steady_clock::time_point start1 = std::chrono::steady_clock::now();
-  binary_mult(B,B.transpose(),C);
+  Eigen::MatrixXd B_Bt;
+//  binary_mult(B,B.transpose(), B_Bt);
+  binary_mult_self(B, B_Bt);
+  Eigen::MatrixXd actual = B_Bt * B;
+
   std::chrono::steady_clock::time_point end1 = std::chrono::steady_clock::now();
   std::cout << "AVX2 " << "Time difference = "
             << std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1).count() << "[micro-s]" << std::endl;
 
-  Eigen::MatrixXd C1;
   std::chrono::steady_clock::time_point start3 = std::chrono::steady_clock::now();
-  binary_mult512(B,B.transpose(),C1);
+  Eigen::MatrixXd B_Bt_;
+//  binary_mult(B,B.transpose(), B_Bt);
+  binary_mult512(B, B, B_Bt);
+  Eigen::MatrixXd actual_ = B_Bt * B;
+
   std::chrono::steady_clock::time_point end3 = std::chrono::steady_clock::now();
   std::cout << "AVX512 " << "Time difference = "
             << std::chrono::duration_cast<std::chrono::microseconds>(end3 - start3).count() << "[micro-s]" << std::endl;
 
 
   std::chrono::steady_clock::time_point start2 = std::chrono::steady_clock::now();
-  Eigen::MatrixXd ans = B * B.transpose();
+  Eigen::MatrixXd expected = (B * B.transpose()) * B;
   std::chrono::steady_clock::time_point end2 = std::chrono::steady_clock::now();
   std::cout << "Intel SGEMM " << "Time difference = "
             << std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2).count() << "[micro-s]" << std::endl;
 
-  EXPECT_EQ(C.sum(), ans.sum());
-  EXPECT_EQ(C1.sum(), ans.sum());
+
+  EXPECT_EQ(actual.sum(), expected.sum());
+  EXPECT_EQ(actual_.sum(), expected.sum());
+}
+
+
+TEST(Binary, my2){
+  Eigen::MatrixXd A(10,15);
+  A.setRandom();
+  A = A.unaryExpr([](float x){ return 2. * (x>=0) - 1.; });
+  Eigen::MatrixXd B(15,12);
+  B.setRandom();
+  B = B.unaryExpr([](float x){ return 2. * (x>=0) - 1.; });
+
+  Eigen::MatrixXd C;
+  binary_mult(A, B , C);
+
+  EXPECT_EQ(C, A * B);
 
 }
