@@ -13,4 +13,5 @@ MatrixXf deconcatenate(MatrixXi A);
 
 MatrixXf BMP(MatrixXf A,MatrixXf B);
 
+
 #endif //DNE_BMP_H

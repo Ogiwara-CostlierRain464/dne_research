@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 #include "../src/BMP.h"
+#include "../src/binary.h"
 #include <Eigen/Core>
+#include <chrono>
 using Eigen::MatrixXf;
 using namespace std;
-
+using namespace std::literals::chrono_literals;
 
 class Binary: public ::testing::Test{};
 
@@ -16,7 +18,7 @@ float float_sign(float x){
 TEST(Binary, test){
   std::cout << "OpenMP threads: " <<  Eigen::nbThreads() << std::endl;
 
-  int N = 4096 * 4;
+  int N = 4096 ;
 
   MatrixXf A(N,N);
   // A.setZero();
@@ -59,9 +61,41 @@ TEST(Binary, test){
 
 TEST(Binary, OpenMP_tutorial){
   int tmp = 0;
-#pragma omp for private(tmp)
+#pragma omp parallel for private(tmp)
   for(int j = 0; j < 1000; ++j){
     tmp += j;
   }
   printf("%d\n", tmp);
+}
+
+TEST(Binary, my){
+  Eigen::MatrixXd B(3000,10000);
+  B.setRandom();
+  B = B.unaryExpr([](float x){ return 2. * (x>=0) - 1.; });
+
+  Eigen::MatrixXd C;
+
+  std::chrono::steady_clock::time_point start1 = std::chrono::steady_clock::now();
+  binary_mult(B,B.transpose(),C);
+  std::chrono::steady_clock::time_point end1 = std::chrono::steady_clock::now();
+  std::cout << "AVX2 " << "Time difference = "
+            << std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1).count() << "[micro-s]" << std::endl;
+
+  Eigen::MatrixXd C1;
+  std::chrono::steady_clock::time_point start3 = std::chrono::steady_clock::now();
+  binary_mult512(B,B.transpose(),C1);
+  std::chrono::steady_clock::time_point end3 = std::chrono::steady_clock::now();
+  std::cout << "AVX512 " << "Time difference = "
+            << std::chrono::duration_cast<std::chrono::microseconds>(end3 - start3).count() << "[micro-s]" << std::endl;
+
+
+  std::chrono::steady_clock::time_point start2 = std::chrono::steady_clock::now();
+  Eigen::MatrixXd ans = B * B.transpose();
+  std::chrono::steady_clock::time_point end2 = std::chrono::steady_clock::now();
+  std::cout << "Intel SGEMM " << "Time difference = "
+            << std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2).count() << "[micro-s]" << std::endl;
+
+  EXPECT_EQ(C.sum(), ans.sum());
+  EXPECT_EQ(C1.sum(), ans.sum());
+
 }

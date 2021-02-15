@@ -79,7 +79,7 @@ void p(){
 
   auto B_arr = new __m256i[(C/256) * R];
 
-  #pragma omp parallel for
+
   for(size_t i = 0; i < R; ++i){
     for(size_t j = 0; j < C; j+=256){
       // 64個の数字ごとに格納
@@ -120,8 +120,6 @@ void p(){
 
   Eigen::MatrixXd ans(R,R);
 
-
-  #pragma omp parallel for
   for(size_t i = 0; i < R; ++i){
     for(size_t j = 0; j < R; ++j){
       // inner product

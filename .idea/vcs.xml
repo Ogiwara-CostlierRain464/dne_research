@@ -4,9 +4,12 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/googletest-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-release/googletest-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-release/json_test_data" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-release/third_party/json/test/cmake_fetch_content/_deps/json-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/eigen" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/gflags" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/glog" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/third_party/json" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/third_party/libpopcnt" vcs="Git" />
   </component>
 </project>
