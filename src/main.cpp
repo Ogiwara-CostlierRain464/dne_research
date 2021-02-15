@@ -55,10 +55,6 @@ template<class T> inline void Log(const __m256i & value)
   std::cout << std::endl;
 }
 
-inline __attribute__((__always_inline__)) uint64_t h_dis(const __m256i a, const __m256i b){
-  __m256i xor_ = _mm256_xor_epi64(a, b);
-  return popcnt(&xor_, 256/8);
-}
 
 int main(int argc, char* argv[]){
 
