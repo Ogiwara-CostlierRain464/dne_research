@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    FLAGS_log_dir = R"(C:\Windows\Temp\DNE)";
+    FLAGS_log_dir = R"(C:\Windows\Temp\)";
 #endif
   google::InitGoogleLogging(argv[0]);
 
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]){
 
   DatasetRepo::load(dataset, FLAGS_train_ratio, S, T, answer, C);
 
-  RealDNE dne(S,T,C, params);
+  RawDNE dne(S,T,C, params);
   Eigen::MatrixXd W,B;
   dne.fit(W,B);
 

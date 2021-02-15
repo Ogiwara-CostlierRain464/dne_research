@@ -5,6 +5,7 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
 #include "params.h"
+#include "../binary.h"
 
 struct RawDNE {
     typedef std::unordered_map<size_t, size_t> TrainLabel;
@@ -60,9 +61,11 @@ private:
     assert(W.rows() == params.m and W.cols() == C);
     Eigen::MatrixXd wo;
     WO(W, wo);
+    Eigen::MatrixXd B_Bt;
+    binary_mult512(B, B, B_Bt);
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo
-      + params.mu * (B * B.transpose() * B)
+      + params.mu * (B_Bt * B)
       + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
     Eigen::MatrixXd cf;
