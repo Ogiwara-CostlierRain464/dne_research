@@ -30,6 +30,7 @@ struct RawDNE {
       B = Eigen::MatrixXd::Random(params.m, S.rows());
 
       for(size_t out = 1; out <= params.T_out; ++out){
+        std::cout << "out: " << out << std::endl;
 
           for(size_t in = 1; in <= params.T_in; ++in){
             eq11(W, B);
