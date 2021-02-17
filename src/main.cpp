@@ -79,6 +79,8 @@ int main(int argc, char* argv[]){
           ? DatasetRepo::Wiki
           : DatasetRepo::BlogCatalog;
 
+  size_t seed = time(nullptr);
+  srand(seed);
 
   report("dataset: " + FLAGS_dataset);
   report("train_ratio: " + std::to_string(FLAGS_train_ratio));
@@ -89,11 +91,12 @@ int main(int argc, char* argv[]){
   report("lambda: " +  std::to_string(FLAGS_lambda));
   report("mu: " + std::to_string(FLAGS_mu));
   report("rho: " + std::to_string(FLAGS_rho));
+  report("seed: " + std::to_string(seed));
 
   Params params(
     FLAGS_m, FLAGS_T_in, FLAGS_T_out,
     FLAGS_tau, FLAGS_lambda, FLAGS_mu,
-    FLAGS_rho, time(nullptr));
+    FLAGS_rho, seed);
 
   Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
   std::unordered_map<size_t, size_t> T;

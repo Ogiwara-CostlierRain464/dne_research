@@ -36,8 +36,8 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
       assert(sample_count >= 1);
 
       for(size_t j = 0; j < sample_count; ++j){
-        auto node_in_i = groups[i][j];
-        out_T[node_in_i] = i;
+        auto node_in_i_randomly = groups[i][rand() % group_size];
+        out_T[node_in_i_randomly] = i;
       }
     }
 
