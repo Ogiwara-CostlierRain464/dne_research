@@ -25,6 +25,7 @@ DEFINE_double(lambda, 1.0, "lambda");
 DEFINE_double(mu, 0.01, "mu");
 DEFINE_double(rho, 0.01, "rho");
 DEFINE_bool(check_loss, false, "check loss every W learn");
+DEFINE_uint64(seed, time(nullptr), "seed of random number");
 
 namespace {
   double h_dis(std::vector<size_t> const &answer,
@@ -80,8 +81,7 @@ int main(int argc, char* argv[]){
           ? DatasetRepo::Wiki
           : DatasetRepo::BlogCatalog;
 
-  size_t seed = time(nullptr);
-  srand(seed);
+  srand(FLAGS_seed);
 
   report("dataset: " + FLAGS_dataset);
   report("train_ratio: " + std::to_string(FLAGS_train_ratio));
@@ -92,12 +92,12 @@ int main(int argc, char* argv[]){
   report("lambda: " +  std::to_string(FLAGS_lambda));
   report("mu: " + std::to_string(FLAGS_mu));
   report("rho: " + std::to_string(FLAGS_rho));
-  report("seed: " + std::to_string(seed));
+  report("seed: " + std::to_string(FLAGS_seed));
 
   Params params(
     FLAGS_m, FLAGS_T_in, FLAGS_T_out,
     FLAGS_tau, FLAGS_lambda, FLAGS_mu,
-    FLAGS_rho, seed, FLAGS_check_loss);
+    FLAGS_rho, FLAGS_seed, FLAGS_check_loss);
 
   Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
   std::unordered_map<size_t, size_t> T;
