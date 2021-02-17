@@ -29,13 +29,24 @@ struct RawDNE {
       W = Eigen::MatrixXd::Random(params.m, C);
       B = Eigen::MatrixXd::Random(params.m, S.rows());
 
+      double loss_ = 0;
       for(size_t out = 1; out <= params.T_out; ++out){
         std::cout << "out: " << out << std::endl;
 
-          for(size_t in = 1; in <= params.T_in; ++in){
-            eq11(W, B);
-          }
-          eq13(B,W);
+        for(size_t in = 1; in <= params.T_in; ++in){
+          eq11(W, B);
+        }
+        eq13(B,W);
+
+        if(params.check_loss){
+           double loss_now = loss(W,B);
+           std::cout << "loss: " << loss_now << std::endl;
+           if(loss_now > loss_){
+             std::cout << "loss increased !!!!" << std::endl;
+           }
+
+           loss_ = loss_now;
+        }
       }
     }
 
@@ -98,6 +109,18 @@ private:
       sgn(C * sum_1 - b_sum, w_c);
       outW.col(c) = w_c;
     }
+  }
+
+  double loss(Eigen::MatrixXd const &W,
+              Eigen::MatrixXd const &B){
+    Eigen::MatrixXd wo;
+    WO(W, wo);
+    auto N = S.rows();
+
+    return - 0.5 * (B * S * B.transpose()).trace()
+           + params.lambda * (wo.transpose() * B).trace()
+           + params.mu * 0.25 * (B * B.transpose()).trace()
+           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,

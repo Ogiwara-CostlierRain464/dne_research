@@ -12,10 +12,11 @@ struct Params{
     double lambda,
     double mu,
     double rho,
-    size_t seed) :
+    size_t seed,
+    bool check_loss) :
     m(m), T_in(tIn), T_out(tOut),
     tau(tau), lambda(lambda), mu(mu),
-    rho(rho), seed(seed) {}
+    rho(rho), seed(seed), check_loss(check_loss) {}
 
   size_t m;
   size_t T_in;
@@ -25,6 +26,7 @@ struct Params{
   double mu;
   double rho;
   size_t seed;
+  bool check_loss;
 };
 
 #endif //DNE_PARAMS_H

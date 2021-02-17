@@ -24,6 +24,7 @@ DEFINE_double(tau, 0.01, "tau");
 DEFINE_double(lambda, 1.0, "lambda");
 DEFINE_double(mu, 0.01, "mu");
 DEFINE_double(rho, 0.01, "rho");
+DEFINE_bool(check_loss, false, "check loss every W learn");
 
 namespace {
   double h_dis(std::vector<size_t> const &answer,
@@ -96,7 +97,7 @@ int main(int argc, char* argv[]){
   Params params(
     FLAGS_m, FLAGS_T_in, FLAGS_T_out,
     FLAGS_tau, FLAGS_lambda, FLAGS_mu,
-    FLAGS_rho, seed);
+    FLAGS_rho, seed, FLAGS_check_loss);
 
   Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
   std::unordered_map<size_t, size_t> T;
