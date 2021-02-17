@@ -25,7 +25,7 @@ struct RawDNE {
     }
 
     void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
-      srand(time(nullptr));
+      srand(params.seed);
       W = Eigen::MatrixXd::Random(params.m, C);
       B = Eigen::MatrixXd::Random(params.m, S.rows());
 
@@ -63,7 +63,7 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd B_Bt;
-    binary_mult512(B, B, B_Bt);
+    binary_mult512_self(B,B_Bt);
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo
       + params.mu * (B_Bt * B)
@@ -84,6 +84,7 @@ private:
       b_sum += B.col(i);
     }
 
+    #pragma omp parallel for
     for(size_t c = 0; c < C; ++c){
       Eigen::VectorXd sum_1 = Eigen::VectorXd::Zero(params.m);
       for(auto &iter: T){

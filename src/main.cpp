@@ -106,12 +106,19 @@ int main(int argc, char* argv[]){
   Eigen::MatrixXd W,B;
   dne.fit(W,B);
 
+  assert((W.array() != NAN && W.array() != INFINITY).any());
+  assert((B.array() != NAN && B.array() != INFINITY).any());
+
   auto N = S.rows();
 
   std::vector<size_t> predicted{};
   predicted.reserve(N);
+
   for(size_t n = 0; n < N; ++n){
     Eigen::Index max_index;
+//    Eigen::MatrixXd pred;
+//    binary_mult(W.transpose(), B.col(n), pred);
+//    static_cast<Eigen::VectorXd>(pred).maxCoeff(&max_index);
     (W.transpose() * B.col(n)).maxCoeff(&max_index);
     predicted.push_back(max_index);
   }
@@ -119,6 +126,9 @@ int main(int argc, char* argv[]){
 
   // さて、交差確認やlossの減少の確認は？
   // そこらへんもゆくゆくは整備
+  // 精度が出ない理由は？
+  // seedの指定、データセットのrandomな選択、NaNかInfの可能性
+  // 毎回のre_allocは重い！
 
   std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
 

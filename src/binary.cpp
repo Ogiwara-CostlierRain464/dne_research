@@ -20,9 +20,6 @@ inline __attribute__((__always_inline__)) uint64_t h_dis(const __m256i a, const 
   }
 }
 
-#define BIT_SIZE 256
-#define BIT_UNIT_TYPE __m256i
-
 void binary_mult(const Eigen::MatrixXd &A,
                  const Eigen::MatrixXd &B,
                  Eigen::MatrixXd &outC) {
@@ -162,24 +159,27 @@ void binary_mult_self(const Eigen::MatrixXd &A,
   }
 }
 
-void binary_mult512(const Eigen::MatrixXd &A,
-                 const Eigen::MatrixXd &B,
+__m512i* alloc_tmp(size_t size){
+  static __m512i* tmp = nullptr;
+  if(tmp == nullptr){
+    tmp = new __m512i[ size ];
+  }
+  return tmp;
+}
+
+void binary_mult512_self(const Eigen::MatrixXd &A,
                  Eigen::MatrixXd &outC) {
 
 
   auto A_row = A.rows();
   auto A_col = A.cols();
-  auto B_row = B.rows();
-  auto B_col = B.cols();
 
   // AのcolとBのrowを増やす必要がある
   auto A_col_inc = A_col % 512 == 0 ? A_col : (A_col - (A_col % 512)) + 512;
-  auto B_row_inc = B_row % 512 == 0 ? B_row : (B_row - (B_row % 512)) + 512;
 
   assert(A_col_inc % 512 == 0);
-  assert(B_row_inc % 512 == 0);
 
-  auto A_arr = new __m512i[ A_row * (A_col_inc / 512)];
+  auto A_arr = alloc_tmp(A_row * (A_col_inc / 512));
 
 #pragma omp parallel for collapse(2)
   for(size_t i = 0; i < A_row; ++i){

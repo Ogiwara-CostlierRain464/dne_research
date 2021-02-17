@@ -355,7 +355,6 @@ void DatasetRepo::clean(UGraph &graph,
   }
   assert(out_A.isApprox(out_A.transpose()));
 
-  #pragma omp parallel for
   for(size_t i = 0; i < node_num; ++i){
     out_A.row(i) /= out_A.row(i).sum();
   }
