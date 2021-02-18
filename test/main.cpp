@@ -139,6 +139,10 @@ TEST_F(Unit, sort_by_key){
   EXPECT_EQ(b[0][0], 3);
 }
 
+TEST_F(Unit, Inf){
+  EXPECT_EQ(1. / 0. , INFINITY);
+}
+
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

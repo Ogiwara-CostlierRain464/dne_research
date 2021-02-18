@@ -106,6 +106,9 @@ int main(int argc, char* argv[]){
   if(FLAGS_model == "real"){
     RealDNE dne(S,T,C, params);
     dne.fit(W,B);
+  }else if(FLAGS_model == "original"){
+    OriginalDNE dne(S,T,C,params);
+    dne.fit(W,B);
   }else{
     RawDNE dne(S,T,C, params);
     dne.fit(W,B);
