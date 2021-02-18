@@ -40,6 +40,7 @@ struct OriginalDNE{
 
 
     for(size_t i = 1; i <= params.T_out; ++i){
+      std::cout << "out: " << i << std::endl;
       eqB(W,B);
       eq20(B,W);
     }
