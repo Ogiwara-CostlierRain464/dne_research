@@ -26,6 +26,7 @@ DEFINE_double(mu, 0.01, "mu");
 DEFINE_double(rho, 0.01, "rho");
 DEFINE_bool(check_loss, false, "check loss every W learn");
 DEFINE_uint64(seed, time(nullptr), "seed of random number");
+DEFINE_string(model, "raw", "model name");
 
 namespace {
   double h_dis(std::vector<size_t> const &answer,
@@ -45,16 +46,6 @@ namespace {
     LOG(INFO) << log;
     std::cout << log << std::endl;
   }
-}
-
-template<class T> inline void Log(const __m256i & value)
-{
-  const size_t n = sizeof(__m256i) / sizeof(T);
-  T buffer[n];
-  _mm256_storeu_si256((__m256i*)buffer, value);
-  for (int i = n - 1; i > -1 ; --i)
-    std::cout << buffer[i] << " ";
-  std::cout << std::endl;
 }
 
 
@@ -93,6 +84,7 @@ int main(int argc, char* argv[]){
   report("mu: " + std::to_string(FLAGS_mu));
   report("rho: " + std::to_string(FLAGS_rho));
   report("seed: " + std::to_string(FLAGS_seed));
+  report("model: " + FLAGS_model);
 
   Params params(
     FLAGS_m, FLAGS_T_in, FLAGS_T_out,
@@ -106,9 +98,15 @@ int main(int argc, char* argv[]){
 
   DatasetRepo::load(dataset, FLAGS_train_ratio, S, T, answer, C);
 
-  RawDNE dne(S,T,C, params);
   Eigen::MatrixXd W,B;
-  dne.fit(W,B);
+
+  if(FLAGS_model == "real"){
+    RealDNE dne(S,T,C, params);
+    dne.fit(W,B);
+  }else{
+    RawDNE dne(S,T,C, params);
+    dne.fit(W,B);
+  }
 
   assert((W.array() != NAN && W.array() != INFINITY).any());
   assert((B.array() != NAN && B.array() != INFINITY).any());

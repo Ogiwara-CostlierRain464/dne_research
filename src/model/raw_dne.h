@@ -95,7 +95,6 @@ private:
       b_sum += B.col(i);
     }
 
-    #pragma omp parallel for
     for(size_t c = 0; c < C; ++c){
       Eigen::VectorXd sum_1 = Eigen::VectorXd::Zero(params.m);
       for(auto &iter: T){

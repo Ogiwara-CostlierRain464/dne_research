@@ -13,4 +13,7 @@ void binary_mult(const Eigen::MatrixXd &A,
 void binary_mult512_self(const Eigen::MatrixXd &A,
                  Eigen::MatrixXd &outC);
 
+template<class T>
+inline void Log(const __m256i & value);
+
 #endif //DNE_BINARY_H

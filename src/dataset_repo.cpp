@@ -28,6 +28,7 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
 
     out_T = std::unordered_map<size_t, size_t>();
 
+    #pragma omp parallel for
     for(size_t i = 0; i < groups.size(); ++i){
       auto group_size = groups[i].size();
       assert(group_size >= 1);
@@ -37,6 +38,7 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
 
       for(size_t j = 0; j < sample_count; ++j){
         auto node_in_i_randomly = groups[i][rand() % group_size];
+        #pragma omp atomic write
         out_T[node_in_i_randomly] = i;
       }
     }
