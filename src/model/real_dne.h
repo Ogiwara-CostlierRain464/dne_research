@@ -39,15 +39,15 @@ struct RealDNE{
         eq11(W, B);
       }
       eq13(B, W);
-//
-//      if(params.check_loss){
-//        double loss_now = loss(W,B);
-//        std::cout << "loss: " << loss_now << std::endl;
-//        if(loss_now > loss_){
-//          std::cout << "loss increased !!!!" << std::endl;
-//        }
-//        loss_ = loss_now;
-//      }
+
+      if(params.check_loss){
+        double loss_now = loss(W,B);
+        std::cout << "loss: " << loss_now << std::endl;
+        if(loss_now > loss_){
+          std::cout << "loss increased !!!!" << std::endl;
+        }
+        loss_ = loss_now;
+      }
     }
   }
 
@@ -105,6 +105,18 @@ struct RealDNE{
       w_c = C * sum_1 - b_sum;
       outW.col(c) = w_c;
     }
+  }
+
+  double loss(Eigen::MatrixXd const &W,
+              Eigen::MatrixXd const &B){
+    Eigen::MatrixXd wo;
+    WO(W, wo);
+    auto N = S.rows();
+
+    return - 0.5 * (B * S * B.transpose()).trace()
+           + params.lambda * (wo.transpose() * B).trace()
+           + params.mu * 0.25 * (B * B.transpose()).trace()
+           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
   }
 };
 
