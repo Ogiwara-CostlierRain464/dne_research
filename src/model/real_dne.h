@@ -48,6 +48,14 @@ struct RealDNE{
         }
         loss_ = loss_now;
       }
+
+      if((W.array() != NAN && W.array() != INFINITY).any()
+      && (B.array() != NAN && B.array() != INFINITY).any()){
+        ;
+      }else{
+        std::cerr << "Invalid format" << std::endl;
+        exit(-1);
+      }
     }
   }
 

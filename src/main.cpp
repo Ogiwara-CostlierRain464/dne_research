@@ -48,6 +48,9 @@ namespace {
   }
 }
 
+#ifdef NDEBUG
+#error "If this shown, recreate assert function."
+#endif
 
 int main(int argc, char* argv[]){
 
