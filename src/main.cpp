@@ -12,6 +12,7 @@
 #include "../third_party/libpopcnt/libpopcnt.h"
 #include "dataset_repo.h"
 #include "model/raw_dne.h"
+#include "model/raw_svd_dne.h"
 #include "model/original_dne.h"
 #include "model/real_dne.h"
 
@@ -108,6 +109,9 @@ int main(int argc, char* argv[]){
     dne.fit(W,B);
   }else if(FLAGS_model == "original"){
     OriginalDNE dne(S,T,C,params);
+    dne.fit(W,B);
+  }else if(FLAGS_model == "raw_svd"){
+    RawSVD_DNE dne(S, T, C, params);
     dne.fit(W,B);
   }else{
     RawDNE dne(S,T,C, params);
