@@ -1,32 +1,27 @@
 #include <boost/serialization/unordered_map.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/map.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <Eigen/Sparse>
-#include <Eigen/SparseCore>
-#include <Eigen/SVD>
-#include <immintrin.h>
-#include "../third_party/libpopcnt/libpopcnt.h"
 #include "dataset_repo.h"
 #include "model/raw_dne.h"
 #include "model/raw_svd_dne.h"
 #include "model/original_dne.h"
 #include "model/real_dne.h"
+#include "logging.h"
 
 DEFINE_string(dataset, "karate", "Dataset to ML");
 DEFINE_double(train_ratio, 0.5, "Train data ratio");
 DEFINE_uint32(m, 10, "dimension of embedding");
 DEFINE_uint32(T_in, 5, "T_in");
 DEFINE_uint32(T_out, 10, "T_out");
-DEFINE_double(tau, 0.01, "tau");
+DEFINE_double(tau, 1, "tau");
 DEFINE_double(lambda, 1.0, "lambda");
 DEFINE_double(mu, 0.01, "mu");
 DEFINE_double(rho, 0.01, "rho");
 DEFINE_bool(check_loss, false, "check loss every W learn");
 DEFINE_uint64(seed, time(nullptr), "seed of random number");
 DEFINE_string(model, "raw", "model name");
+DEFINE_bool(check_W, false, "Output created W");
 
 namespace {
   double h_dis(std::vector<size_t> const &answer,
@@ -40,11 +35,6 @@ namespace {
     }
 
     return result / answer.size();
-  }
-
-  void report(std::string const &log){
-    LOG(INFO) << log;
-    std::cout << log << std::endl;
   }
 }
 
@@ -135,13 +125,14 @@ int main(int argc, char* argv[]){
     predicted.push_back(max_index);
   }
 
-
-  // さて、交差確認やlossの減少の確認は？
-  // そこらへんもゆくゆくは整備
-  // 精度が出ない理由は？
-  // seedの指定、データセットのrandomな選択、NaNかInfの可能性
-  // 毎回のre_allocは重い！
-
   report("H-dis: " + std::to_string(h_dis(answer, predicted)));
 
+  if(FLAGS_check_W){
+    std::cout << B << std::endl;
+  }
+
+  Eigen::MatrixXd B_Bt;
+  binary_mult_self(B, B_Bt);
+  std::cout << "constraint1: " << B_Bt.sum() - B_Bt.trace() << std::endl;
+  std::cout << "constraint2: " << (B * Eigen::VectorXd::Ones(N)).sum() << std::endl;
 }

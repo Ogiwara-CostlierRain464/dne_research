@@ -11,6 +11,7 @@
 
 #include "params.h"
 #include "../randomized_svd.h"
+#include "../logging.h"
 
 DEFINE_bool(original_svd_init, true, "Use Randomized SVD to init");
 
@@ -33,6 +34,9 @@ struct OriginalDNE{
 
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(params.seed);
+
+    report("Init method: " +
+    std::string(FLAGS_original_svd_init ? "RandSVD" : "Random"));
 
     if(FLAGS_original_svd_init){
       Eigen::MatrixXd SC = S;
