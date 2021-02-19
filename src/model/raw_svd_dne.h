@@ -29,9 +29,11 @@ struct RawSVD_DNE {
       srand(params.seed);
       Eigen::MatrixXd SC = S;
       auto svd = RandomizedSvd(SC, params.m);
-      sgn(svd.matrixV().transpose(), B);
-      W = Eigen::MatrixXd::Zero(params.m, C);
-      eq13(B, W);
+//      sgn( svd.matrixV().transpose(), B);
+//      W = Eigen::MatrixXd::Zero(params.m, C);
+//      eq13(B, W);
+      W = Eigen::MatrixXd::Random(params.m, C);
+      B = svd.matrixV().transpose();
 
       double loss_ = 0;
       for(size_t out = 1; out <= params.T_out; ++out){
