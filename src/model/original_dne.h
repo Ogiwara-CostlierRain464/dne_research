@@ -42,9 +42,7 @@ struct OriginalDNE{
       Eigen::MatrixXd SC = S;
       auto svd = RandomizedSvd(SC, params.m);
       B = svd.matrixV().transpose();
-      sgn(svd.matrixV().transpose(), B);
-      W = Eigen::MatrixXd::Zero(params.m, C);
-      eq20(B,W);
+      W = Eigen::MatrixXd::Random(params.m, C);
     }else{
       W = Eigen::MatrixXd::Random(params.m, C);
       B = Eigen::MatrixXd::Random(params.m, S.rows());
