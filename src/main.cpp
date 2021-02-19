@@ -1,4 +1,3 @@
-#include <boost/graph/graphviz.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -114,6 +113,7 @@ int main(int argc, char* argv[]){
     RawSVD_DNE dne(S, T, C, params);
     dne.fit(W,B);
   }else{
+    assert(FLAGS_model == "raw");
     RawDNE dne(S,T,C, params);
     dne.fit(W,B);
   }
@@ -142,6 +142,6 @@ int main(int argc, char* argv[]){
   // seedの指定、データセットのrandomな選択、NaNかInfの可能性
   // 毎回のre_allocは重い！
 
-  std::cout << "H-dis: " << h_dis(answer, predicted) << std::endl;
+  report("H-dis: " + std::to_string(h_dis(answer, predicted)));
 
 }

@@ -4,6 +4,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
+#include <iostream>
 #include "params.h"
 #include "../binary.h"
 

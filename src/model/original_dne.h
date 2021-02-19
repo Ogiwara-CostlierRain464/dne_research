@@ -7,9 +7,12 @@
 #include <Eigen/SVD>
 #include <chrono>
 #include <ctime>
+#include <gflags/gflags.h>
 
 #include "params.h"
 #include "../randomized_svd.h"
+
+DEFINE_bool(original_svd_init, true, "Use Randomized SVD to init");
 
 struct OriginalDNE{
   typedef std::unordered_map<size_t, size_t> TrainLabel;
@@ -30,14 +33,17 @@ struct OriginalDNE{
 
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(params.seed);
-    Eigen::MatrixXd SC = S;
-    auto svd = RandomizedSvd(SC, params.m);
 
-    sgn(svd.matrixV().transpose(), B);
-
-    W = Eigen::MatrixXd::Zero(params.m, C);
-    eq20(B,W);
-
+    if(FLAGS_original_svd_init){
+      Eigen::MatrixXd SC = S;
+      auto svd = RandomizedSvd(SC, params.m);
+      sgn(svd.matrixV().transpose(), B);
+      W = Eigen::MatrixXd::Zero(params.m, C);
+      eq20(B,W);
+    }else{
+      W = Eigen::MatrixXd::Random(params.m, C);
+      B = Eigen::MatrixXd::Random(params.m, S.rows());
+    }
 
     for(size_t i = 1; i <= params.T_out; ++i){
       std::cout << "out: " << i << std::endl;
