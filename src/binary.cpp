@@ -169,7 +169,7 @@ __m512i* alloc_tmp(size_t size){
 
 void binary_mult512_self(const Eigen::MatrixXd &A,
                  Eigen::MatrixXd &outC) {
-
+  assert(A.coeff(1,1) == 1 or A.coeff(1,1) == -1);
 
   auto A_row = A.rows();
   auto A_col = A.cols();

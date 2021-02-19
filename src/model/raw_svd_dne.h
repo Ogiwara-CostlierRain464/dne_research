@@ -79,12 +79,17 @@ private:
     assert(W.rows() == params.m and W.cols() == C);
     Eigen::MatrixXd wo;
     WO(W, wo);
-//    Eigen::MatrixXd B_Bt;
-//    binary_mult512_self(B,B_Bt);
+    Eigen::MatrixXd B_Bt;
+    if(B.coeff(1,1) == 1 or B.coeff(1,1) == -1){
+      binary_mult512_self(B,B_Bt);
+    }else{
+      B_Bt = B * B.transpose();
+    }
+
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo;
-//      + params.mu * (B_Bt * B)
-//      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + params.mu * (B_Bt * B)
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
