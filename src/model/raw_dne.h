@@ -41,7 +41,7 @@ struct RawDNE {
           if(params.check_loss){
             double loss_now = loss(W,B);
             std::cout << "T_in: " << in << " loss: " << loss_now << std::endl;
-            if(loss_now > loss2){
+            if(loss2 != 0 and loss_now > loss2){
               std::cout <<  "T_in: " << in << " loss increased !!!!" << std::endl;
             }
 
@@ -53,7 +53,7 @@ struct RawDNE {
         if(params.check_loss){
            double loss_now = loss(W,B);
            std::cout << "loss: " << loss_now << std::endl;
-           if(loss_now > loss_){
+           if(loss_ != 0 and loss_now > loss_){
              std::cout << "loss increased !!!!" << std::endl;
            }
 
