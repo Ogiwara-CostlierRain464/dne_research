@@ -78,7 +78,10 @@ private:
     if(B.coeff(1,1) == 1 or B.coeff(1,1) == -1){
       binary_mult512_self(B,B_Bt);
     }else{
+      static bool only_once = false;
+      assert(!only_once);
       B_Bt = B * B.transpose();
+      only_once = true;
     }
 
     Eigen::MatrixXd dLB = -B * S
