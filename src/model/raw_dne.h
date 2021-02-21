@@ -44,7 +44,6 @@ struct RawDNE {
             if(loss2 != 0 and loss_now > loss2){
               std::cout <<  "T_in: " << in << " loss increased !!!!" << std::endl;
             }
-
             loss2 = loss_now;
           }
         }

@@ -93,6 +93,8 @@ int main(int argc, char* argv[]){
 
   Eigen::MatrixXd W,B;
 
+  report("actual train ratio: " + std::to_string((double) T.size() / (double) answer.size()));
+
   if(FLAGS_model == "real"){
     RealDNE dne(S,T,C, params);
     dne.fit(W,B);
