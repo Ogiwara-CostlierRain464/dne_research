@@ -35,6 +35,8 @@ struct RawSVD_DNE {
       W = Eigen::MatrixXd::Random(params.m, C);
       B = svd.matrixV().transpose();
 
+      eq13(B, W);
+
       double loss_ = 0;
       for(size_t out = 1; out <= params.T_out; ++out){
         std::cout << "out: " << out << std::endl;
