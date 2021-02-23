@@ -135,6 +135,9 @@ int main(int argc, char* argv[]){
 
   Eigen::MatrixXd B_Bt;
   binary_mult_self(B, B_Bt);
-  std::cout << "constraint1: " << B_Bt.sum() - B_Bt.trace() << std::endl;
-  std::cout << "constraint2: " << (B * Eigen::VectorXd::Ones(N)).sum() << std::endl;
+
+  // || B * B^T ||^2
+  std::cout << "constraint1: " << B_Bt.trace() << std::endl;
+  // || B * 1 ||^2
+  std::cout << "constraint2: " << (B * Eigen::VectorXd::Ones(N)).trace() << std::endl;
 }
