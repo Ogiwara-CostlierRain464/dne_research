@@ -138,6 +138,6 @@ int main(int argc, char* argv[]){
 
   // || B * B^T ||^2
   std::cout << "constraint1: " << B_Bt.trace() << std::endl;
-  // || B * 1 ||^2
+  // || B * 1 ||^2 //ここ計算おかしい！！！！！！！！！！
   std::cout << "constraint2: " << (B * Eigen::VectorXd::Ones(N)).trace() << std::endl;
 }

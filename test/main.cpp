@@ -143,6 +143,20 @@ TEST_F(Unit, Inf){
   EXPECT_EQ(1. / 0. , INFINITY);
 }
 
+TEST_F(Unit, sgn_norm){
+  size_t n = 100;
+  size_t m = 2000;
+  MatrixXd mat = MatrixXd::Random(n, m) * 10000;
+  cout << "Max: " << mat.maxCoeff()
+  << " Min: " << mat.minCoeff()
+  << " Mean: " << mat.mean() << endl;
+  MatrixXd bin = mat.array().sign().matrix();
+  bin = (bin.array() == 0).select(-1, bin);
+
+  MatrixXd diff = mat - bin;
+  cout << "F-dis: " << (diff * diff.transpose()).trace() << endl;
+}
+
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
