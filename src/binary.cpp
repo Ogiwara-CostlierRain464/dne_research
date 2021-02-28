@@ -15,7 +15,7 @@ inline __attribute__((__always_inline__)) uint64_t h_dis(const __m256i a, const 
 }
 
   inline __attribute__((__always_inline__)) uint64_t h_dis512(const __m512i a, const __m512i b){
-    __m512i xor_ = _mm512_xor_epi64(a, b);
+    auto xor_ = (__m512i) ((__v8du) a ^ (__v8du) b);
     return popcnt(&xor_, 512/8);
   }
 }
