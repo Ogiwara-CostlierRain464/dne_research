@@ -16,4 +16,8 @@ void binary_mult512_self(const Eigen::MatrixXd &A,
 template<class T>
 inline void Log(const __m256i & value);
 
+static double F_norm_pow2(const Eigen::MatrixXd &in){
+  return (in * in.transpose()).trace();
+}
+
 #endif //DNE_BINARY_H

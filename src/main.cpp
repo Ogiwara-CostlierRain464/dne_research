@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
   binary_mult_self(B, B_Bt);
 
   // || B * B^T ||^2
-  std::cout << "constraint1: " << B_Bt.trace() << std::endl;
+  std::cout << "constraint1: " << F_norm_pow2(B_Bt) << std::endl;
   // || B * 1 ||^2 //ここ計算おかしい！！！！！！！！！！
-  std::cout << "constraint2: " << (B * Eigen::VectorXd::Ones(N)).trace() << std::endl;
+  std::cout << "constraint2: " << F_norm_pow2(B * Eigen::VectorXd::Ones(N)) << std::endl;
 }
