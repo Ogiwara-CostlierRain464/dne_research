@@ -36,6 +36,19 @@ namespace {
 
     return result / answer.size();
   }
+
+  double h_dis(std::unordered_map<size_t, size_t> &answer,
+               std::unordered_map<size_t, size_t> &predict){
+    assert(answer.size() == predict.size());
+    double result = 0;
+    for(auto const &it: answer){
+      if(predict[it.first] != it.second  /*= answer[it.first] */){
+        result += 1;
+      }
+    }
+
+    return result / answer.size();
+  }
 }
 
 #ifdef NDEBUG
@@ -127,7 +140,52 @@ int main(int argc, char* argv[]){
     predicted.push_back(max_index);
   }
 
-  report("H-dis: " + std::to_string(h_dis(answer, predicted)));
+  // ここで、trainとtestで別々に結果を見たい
+  // そのためには、trainのindexとtestのindexの集合を別々に知る
+  // train用のh-disとtest用のh-disをみたいね
+  std::vector<size_t> train_index;
+  std::vector<size_t> test_index;
+  for(size_t n = 0; n < N; ++n){
+    if(T.count(n) > 0){
+      train_index.push_back(n);
+    }else{
+      test_index.push_back(n);
+    }
+  }
+
+  // train/test用のanswer配列の生成
+  std::unordered_map<size_t, size_t> answer_for_train;
+  std::unordered_map<size_t, size_t> answer_for_test;
+  for(auto train: train_index){
+    answer_for_train[train] = answer[train];
+  }
+  for(auto test_i: test_index){
+    answer_for_test[test_i] = answer[test_i];
+  }
+
+  std::unordered_map<size_t, size_t> predicted_train;
+  for(auto train_i: train_index){
+    Eigen::Index max_index;
+    (W.transpose() * B.col(train_i)).maxCoeff(&max_index);
+    predicted_train[train_i] = max_index;
+  }
+  std::unordered_map<size_t, size_t> predicted_test;
+  for(auto test_i: test_index){
+    Eigen::Index max_index;
+    (W.transpose() * B.col(test_i)).maxCoeff(&max_index);
+    predicted_test[test_i] = max_index;
+  }
+
+  double all_h_dis = h_dis(answer, predicted);
+  double train_h_dis = h_dis(answer_for_train, predicted_train);
+  double test_h_dis = h_dis(answer_for_test, predicted_test);
+  double val = ( train_h_dis * T.size() + (test_h_dis * (N - T.size())) ) / N;
+  assert(all_h_dis == val && "Train/Test divide algorithm is wrong!!");
+
+  report("H-dis: " + std::to_string(all_h_dis));
+  report("Train H-dis: " + std::to_string(train_h_dis));
+  report("Test H-dis: " + std::to_string(test_h_dis));
+
 
   if(FLAGS_check_W){
     std::cout << B << std::endl;

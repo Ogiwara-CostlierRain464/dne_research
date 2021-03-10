@@ -157,6 +157,13 @@ TEST_F(Unit, sgn_norm){
   cout << "F-dis: " << (diff * diff.transpose()).trace() << endl;
 }
 
+TEST_F(Unit, key_exist){
+  std::unordered_map<size_t, size_t> a = { {1,2}, {0,3}, {0,4} };
+  EXPECT_EQ(a.count(1), 1);
+  EXPECT_EQ(a.count(0), 1);
+  EXPECT_EQ(a.count(2), 0);
+}
+
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
