@@ -37,6 +37,7 @@ public:
     static void loadAll(
             Dataset dataset,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L,
             std::vector<std::vector<size_t>> &out_groups, // {group_id: [ node_ids ]}
             std::vector<size_t> &out_nodes // {node_id:  group_id }
             );
@@ -53,7 +54,8 @@ public:
                       std::unordered_map<size_t, std::vector<size_t>> &dirty_nodes,
                       std::vector<std::vector<size_t>> &out_groups,
                       std::vector<size_t> &out_nodes,
-                      Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A);
+                      Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A,
+                      Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L);
 };
 
 

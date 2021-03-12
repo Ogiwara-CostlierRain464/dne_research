@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace Eigen;
 using UGraph = DatasetLoader::UGraph;
 
 void DatasetRepo::load(DatasetRepo::Dataset dataset,
@@ -24,7 +25,9 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
                        size_t &out_class_num) {
     std::vector<std::vector<size_t>> groups;
     std::vector<size_t> nodes;
-    loadAll(dataset, out_S, groups, nodes);
+
+    Eigen::SparseMatrix<double, 0, std::ptrdiff_t> L;
+    loadAll(dataset, out_S, L,  groups, nodes);
 
     out_T = std::unordered_map<size_t, size_t>();
 
@@ -44,12 +47,18 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
     out_answer = nodes;
 
     out_class_num = groups.size();
+
+    // Lでちょっと遊ぶ
+    MatrixXd cL = L;
+    EigenSolver<MatrixXd> es(cL);
+    cout << "eigen vals: " <<  (es.eigenvalues().array() == 0).count() << endl;
 }
 
 
 
 void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
                           Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+                          Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L,
                           std::vector<std::vector<size_t>> &out_groups,
                           std::vector<size_t> &out_nodes) {
 
@@ -71,12 +80,14 @@ void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
             data_path = "../dataset/blogcatalog/";
     }
 
-    if(access((data_path + "S.matrix").c_str(), F_OK) != -1){
+    if(access((data_path + "L.matrix").c_str(), F_OK) != -1){
         // 保存済みのデータを返す
         assert(access((data_path + "groups.map").c_str(), F_OK) != -1);
         assert(access((data_path + "nodes.map").c_str(), F_OK) != -1);
+        assert(access((data_path + "S.matrix").c_str(), F_OK) != -1);
 
         loadSparseMatrix(data_path + "S.matrix", out_S);
+        loadSparseMatrix(data_path + "L.matrix", out_L);
         std::ifstream groups_ifs(data_path + "groups.map");
         assert(groups_ifs.is_open());
         boost::archive::text_iarchive groups_ia(groups_ifs);
@@ -141,11 +152,12 @@ void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
         }
 
         Eigen::SparseMatrix<double, 0, std::ptrdiff_t> A;
-        clean(graph, dirty_groups, dirty_nodes, out_groups, out_nodes, A);
+        clean(graph, dirty_groups, dirty_nodes, out_groups, out_nodes, A, out_L);
 
         // Sを計算して保存
         out_S = (A + A * A) / 2;
         saveSparseMatrix(data_path + "S.matrix", out_S);
+        saveSparseMatrix(data_path + "L.matrix", out_L);
 
         std::ofstream groups_ofs(data_path + "groups.map");
         boost::archive::text_oarchive groups_oa(groups_ofs);
@@ -216,7 +228,8 @@ void DatasetRepo::clean(UGraph &graph,
                         std::unordered_map<size_t, std::vector<size_t>> &dirty_nodes,
                         std::vector<std::vector<size_t>> &out_groups,
                         std::vector<size_t> &out_nodes,
-                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A) {
+                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_A,
+                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L) {
 
     for(size_t v = 0; v < dirty_nodes.size(); ++v){
         // まずは、二つ以上のclassが割り当てられたnodeを削除
@@ -358,4 +371,17 @@ void DatasetRepo::clean(UGraph &graph,
   for(size_t i = 0; i < node_num; ++i){
     out_A.row(i) /= out_A.row(i).sum();
   }
+
+  auto D = Eigen::SparseMatrix<double, 0, std::ptrdiff_t>(node_num, node_num);
+  // calc L at here!
+  for(size_t i = 0; i < node_num; ++i){
+    size_t d = 0;
+    for(size_t j = 0; j < node_num; ++j){
+      if(out_A.coeff(i, j) > 0) ++d;
+    }
+
+    D.coeffRef(i, i) = d;
+  }
+
+  out_L = D - out_A;
 }
