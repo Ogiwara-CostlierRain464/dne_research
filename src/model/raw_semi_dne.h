@@ -8,6 +8,10 @@
 #include "params.h"
 #include "../binary.h"
 
+DEFINE_bool(semi_svd, false, "Use Randomized SVD to init");
+DEFINE_double(o, 1.0, "omicron");
+
+
 struct RawSemiDNE {
     typedef std::unordered_map<size_t, size_t> TrainLabel;
     typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
@@ -29,8 +33,19 @@ struct RawSemiDNE {
 
     void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
       srand(params.seed);
-      W = Eigen::MatrixXd::Random(params.m, C);
-      B = Eigen::MatrixXd::Random(params.m, S.rows());
+
+      report("Init method: " +
+      std::string(FLAGS_semi_svd ? "RandSVD" : "Random"));
+
+      if(FLAGS_semi_svd){
+        Eigen::MatrixXd SC = S;
+        auto svd = RandomizedSvd(SC, params.m);
+        B = svd.matrixV().transpose();
+        eq13(B, W);
+      }else{
+        W = Eigen::MatrixXd::Random(params.m, C);
+        B = Eigen::MatrixXd::Random(params.m, S.rows());
+      }
 
       double loss_ = 0;
       for(size_t out = 1; out <= params.T_out; ++out){
@@ -102,7 +117,7 @@ private:
       + params.lambda * wo
       + params.mu * (B_Bt * B)
       + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N))
-      + W * J * L.transpose() + W * J * L;
+      + FLAGS_o * (W * J * L.transpose() + W * J * L);
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
@@ -144,7 +159,7 @@ private:
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
            + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace()
-           + (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
+           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,
