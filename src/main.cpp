@@ -7,6 +7,7 @@
 #include "model/raw_svd_dne.h"
 #include "model/original_dne.h"
 #include "model/real_dne.h"
+#include "model/raw_semi_dne.h"
 #include "logging.h"
 
 DEFINE_string(dataset, "karate", "Dataset to ML");
@@ -98,11 +99,13 @@ int main(int argc, char* argv[]){
     FLAGS_rho, FLAGS_seed, FLAGS_check_loss);
 
   Eigen::SparseMatrix<double, 0, std::ptrdiff_t> S;
+  Eigen::SparseMatrix<double, 0, std::ptrdiff_t> L;
   std::unordered_map<size_t, size_t> T;
   std::vector<size_t> answer;
   size_t C;
 
-  DatasetRepo::load(dataset, FLAGS_train_ratio, S, T, answer, C);
+  DatasetRepo::load(dataset, FLAGS_train_ratio, S, L, T, answer, C);
+  assert(L.rows() == L.cols());
 
   Eigen::MatrixXd W,B;
 
@@ -117,6 +120,9 @@ int main(int argc, char* argv[]){
   }else if(FLAGS_model == "raw_svd"){
     RawSVD_DNE dne(S, T, C, params);
     dne.fit(W,B);
+  }else if(FLAGS_model == "raw_semi"){
+    RawSemiDNE dne(S, L, T, C, params);
+    dne.fit(W, B);
   }else{
     assert(FLAGS_model == "raw");
     RawDNE dne(S,T,C, params);

@@ -14,13 +14,15 @@ public:
         Flickr,
         Karate,
         Wiki,
-        BlogCatalog
+        BlogCatalog,
+        DBLP
     };
 
     static void load(
             Dataset dataset,
             double train_ratio,
             Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+            Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L,
             std::unordered_map<size_t, size_t> &out_T,
             std::vector<size_t> &out_answer,
             size_t &out_class_num

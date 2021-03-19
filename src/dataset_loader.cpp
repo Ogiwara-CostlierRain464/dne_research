@@ -92,3 +92,45 @@ void DatasetLoader::from_separate_format(
 
     out_graph = UGraph(edges.begin(), edges.end(), node_num);
 }
+
+void DatasetLoader::from_DBLP_format(
+  const string &class_file_name,
+  const string &edge_file_name,
+  size_t node_num,
+  size_t group_num,
+  DatasetLoader::UGraph &out_graph,
+  unordered_map<size_t, std::vector<size_t>> &out_groups,
+  unordered_map<size_t, std::vector<size_t>> &out_nodes) {
+
+  // class idは0からだが、node idは1から始まることに注意
+  // node idは0から始まるように調節する
+  std::ifstream class_file(class_file_name);
+  std::ifstream edge_file(edge_file_name);
+  assert(class_file);
+  assert(edge_file);
+  typedef pair<int, int> Edge;
+  vector<Edge> edges{};
+  out_groups = std::unordered_map<size_t, std::vector<size_t>>{};
+  out_nodes = std::unordered_map<size_t, std::vector<size_t>>{};
+
+  string tmp_line{};
+  size_t line_num = 0;
+  while(getline(class_file, tmp_line)){
+    std::istringstream iss(tmp_line);
+    size_t class_;
+    if(iss >> class_){
+      out_groups[class_].push_back(line_num);
+      out_nodes[line_num].push_back(class_);
+      ++line_num;
+    }
+  }
+
+  while(getline(edge_file, tmp_line)){
+    std::stringstream ss(tmp_line);
+    size_t node_one, node_two;
+    ss >> node_one; ss.ignore(); ss >> node_two;
+    edges.emplace_back(node_one - 1, node_two - 1);
+  }
+
+  out_graph = UGraph(edges.begin(), edges.end(), node_num);
+}

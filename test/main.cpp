@@ -164,6 +164,23 @@ TEST_F(Unit, key_exist){
   EXPECT_EQ(a.count(2), 0);
 }
 
+TEST_F(Unit, comma_split){
+  string line = "10,2";
+  stringstream ss(line);
+  size_t node_one;
+  size_t node_two;
+  ss >> node_one;
+  ss.ignore();
+  ss >> node_two;
+
+  EXPECT_EQ(node_one, 10);
+  EXPECT_EQ(node_two, 2);
+}
+
+TEST_F(Unit, identity){
+  cout << Eigen::MatrixXd::Identity(4, 5) << endl;
+}
+
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

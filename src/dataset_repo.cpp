@@ -20,14 +20,14 @@ using UGraph = DatasetLoader::UGraph;
 void DatasetRepo::load(DatasetRepo::Dataset dataset,
                        double train_ratio,
                        Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_S,
+                       Eigen::SparseMatrix<double, 0, std::ptrdiff_t> &out_L,
                        std::unordered_map<size_t, size_t> &out_T,
                        std::vector<size_t> &out_answer,
                        size_t &out_class_num) {
     std::vector<std::vector<size_t>> groups;
     std::vector<size_t> nodes;
 
-    Eigen::SparseMatrix<double, 0, std::ptrdiff_t> L;
-    loadAll(dataset, out_S, L,  groups, nodes);
+    loadAll(dataset, out_S, out_L,  groups, nodes);
 
     out_T = std::unordered_map<size_t, size_t>();
 
@@ -47,11 +47,10 @@ void DatasetRepo::load(DatasetRepo::Dataset dataset,
     out_answer = nodes;
 
     out_class_num = groups.size();
-
-    // Lでちょっと遊ぶ
-    MatrixXd cL = L;
-    EigenSolver<MatrixXd> es(cL);
-    cout << "eigen vals: " <<  (es.eigenvalues().array() == 0).count() << endl;
+//    // Lでちょっと遊ぶ
+//    MatrixXd cL = L;
+//    EigenSolver<MatrixXd> es(cL);
+//    cout << "eigen vals: " <<  (es.eigenvalues().array() == 0).count() << endl;
 }
 
 
@@ -146,6 +145,14 @@ void DatasetRepo::loadAll(DatasetRepo::Dataset dataset,
                                                     N, C, graph, dirty_groups, dirty_nodes);
             }
                 break;
+            case Dataset::DBLP: {
+              // Edge Number: 764512
+              // C = 41325
+              auto N = 203954;
+              auto C = 41325;
+              assert(false);
+            }
+            break;
             default: {
                 assert(false);
             }
