@@ -17,6 +17,7 @@ struct RawSemiDNE {
   typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
   Sp const &S;
+  Sp const &L;
   TrainLabel  const &T;
   size_t const C;
   Params const params;
@@ -27,7 +28,7 @@ struct RawSemiDNE {
   TrainLabel const &T_,
     size_t const C_,
   Params const params_):
-  S(S_), T(T_), C(C_), params(params_){
+  S(S_), L(L_), T(T_), C(C_), params(params_){
   }
 
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
@@ -93,10 +94,13 @@ private:
       B_Bt = B * B.transpose();
     }
 
+    Eigen::MatrixXd J = Eigen::MatrixXd::Identity(N, C);
+
     Eigen::MatrixXd dLB = -B * S
-                          + params.lambda * wo;
-    + params.mu * (B_Bt * B)
-    + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + params.lambda * wo;
+      + params.mu * (B_Bt * B)
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N))
+      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
@@ -137,7 +141,8 @@ private:
     return - 0.5 * (B * S * B.transpose()).trace()
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
-           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
+           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace()
+           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,
