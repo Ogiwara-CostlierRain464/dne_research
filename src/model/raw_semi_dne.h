@@ -34,17 +34,17 @@ struct RawSemiDNE {
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(params.seed);
 
-    report("Init method: " +
-           std::string(FLAGS_semi_svd ? "RandSVD" : "Random"));
     report("o: " + std::to_string(FLAGS_o));
 
     if(FLAGS_semi_svd){
+      report("Init method: RandSVD");
       Eigen::MatrixXd SC = S;
       auto svd = RandomizedSvd(SC, params.m);
       W = Eigen::MatrixXd::Random(params.m, C);
       B = svd.matrixV().transpose();
       eq13(B, W);
     }else{
+      report("Init method: Random");
       W = Eigen::MatrixXd::Random(params.m, C);
       B = Eigen::MatrixXd::Random(params.m, S.rows());
     }
