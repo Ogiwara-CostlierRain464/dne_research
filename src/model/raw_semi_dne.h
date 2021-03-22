@@ -13,87 +13,70 @@ DEFINE_double(o, 1.0, "omicron");
 
 
 struct RawSemiDNE {
-    typedef std::unordered_map<size_t, size_t> TrainLabel;
-    typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
+  typedef std::unordered_map<size_t, size_t> TrainLabel;
+  typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
-    Sp const &S;
-    Sp const &L;
-    TrainLabel  const &T;
-    size_t const C;
-    Params const params;
+  Sp const &S;
+  TrainLabel  const &T;
+  size_t const C;
+  Params const params;
 
-    explicit RawSemiDNE(
-            Sp const &S_,
-            Sp const &L_,
-            TrainLabel const &T_,
-            size_t const C_,
-            Params const &params_):
-    S(S_), L(L_), T(T_), C(C_), params(params_){
-    }
+  explicit RawSemiDNE(
+    Sp const &S_,
+    Sp const &L_,
+  TrainLabel const &T_,
+    size_t const C_,
+  Params const params_):
+  S(S_), T(T_), C(C_), params(params_){
+  }
 
-    void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
-      srand(params.seed);
+  void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
+    srand(params.seed);
+    Eigen::MatrixXd SC = S;
+    auto svd = RandomizedSvd(SC, params.m);
+//      sgn( svd.matrixV().transpose(), B);
+//      W = Eigen::MatrixXd::Zero(params.m, C);
+//      eq13(B, W);
+    W = Eigen::MatrixXd::Random(params.m, C);
+    B = svd.matrixV().transpose();
 
-      report("Init method: " +
-      std::string(FLAGS_semi_svd ? "RandSVD" : "Random"));
-      report("o: " + std::to_string(FLAGS_o));
+    eq13(B, W);
 
-      if(FLAGS_semi_svd){
-        Eigen::MatrixXd SC = S;
-        auto svd = RandomizedSvd(SC, params.m);
-        W = Eigen::MatrixXd::Random(params.m, C);
-        B = svd.matrixV().transpose();
-        eq13(B, W);
-      }else{
-        W = Eigen::MatrixXd::Random(params.m, C);
-        B = Eigen::MatrixXd::Random(params.m, S.rows());
+    double loss_ = 0;
+    for(size_t out = 1; out <= params.T_out; ++out){
+      std::cout << "out: " << out << std::endl;
+
+      for(size_t in = 1; in <= params.T_in; ++in){
+        eq11(W, B);
       }
+      eq13(B,W);
 
-      double loss_ = 0;
-      for(size_t out = 1; out <= params.T_out; ++out){
-        std::cout << "out: " << out << std::endl;
-
-        double loss2 = 0;
-        for(size_t in = 1; in <= params.T_in; ++in){
-          eq11(W, B);
-
-          if(params.check_loss){
-            double loss_now = loss(W,B);
-            std::cout << "T_in: " << in << " loss: " << loss_now << std::endl;
-            if(loss2 != 0 and loss_now > loss2){
-              std::cout <<  "T_in: " << in << " loss increased !!!!" << std::endl;
-            }
-            loss2 = loss_now;
-          }
+      if(params.check_loss){
+        double loss_now = loss(W,B);
+        std::cout << "loss: " << loss_now << std::endl;
+        if(loss_ != 0 and loss_now > loss_){
+          std::cout << "loss increased !!!!" << std::endl;
         }
-        eq13(B,W);
 
-        if(params.check_loss){
-           double loss_now = loss(W,B);
-           std::cout << "loss: " << loss_now << std::endl;
-           if(loss_ != 0 and loss_now > loss_){
-             std::cout << "loss increased !!!!" << std::endl;
-           }
-
-           loss_ = loss_now;
-        }
+        loss_ = loss_now;
       }
     }
+  }
 
 private:
-   void WO(Eigen::MatrixXd const &W,
-           Eigen::MatrixXd &outWO){
-      assert(W.rows() == params.m and W.cols() == C);
-      outWO = Eigen::MatrixXd::Zero(params.m, S.rows());
+  void WO(Eigen::MatrixXd const &W,
+          Eigen::MatrixXd &outWO){
+    assert(W.rows() == params.m and W.cols() == C);
+    outWO = Eigen::MatrixXd::Zero(params.m, S.rows());
 
-      Eigen::VectorXd sum_mc = W.rowwise().sum();
-      for(auto &iter: T){
-          auto i = iter.first;
-          auto ci = iter.second;
-          // W,Bに落とし込んだ時点で、もはやindexを保存していない
-          // 前処理の段階で、インデックスの再割り当てを行おう
-          outWO.col(i) = sum_mc - (C * W.col(ci));
-      }
+    Eigen::VectorXd sum_mc = W.rowwise().sum();
+    for(auto &iter: T){
+      auto i = iter.first;
+      auto ci = iter.second;
+      // W,Bに落とし込んだ時点で、もはやindexを保存していない
+      // 前処理の段階で、インデックスの再割り当てを行おう
+      outWO.col(i) = sum_mc - (C * W.col(ci));
+    }
   }
 
   void eq11(Eigen::MatrixXd const &W,
@@ -110,13 +93,10 @@ private:
       B_Bt = B * B.transpose();
     }
 
-    Eigen::MatrixXd J = Eigen::MatrixXd::Identity(N, C);
-
     Eigen::MatrixXd dLB = -B * S
-      + params.lambda * wo
-      + params.mu * (B_Bt * B)
-      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
-//      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
+                          + params.lambda * wo;
+    + params.mu * (B_Bt * B)
+    + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
@@ -158,7 +138,6 @@ private:
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
            + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
-//           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,
@@ -172,6 +151,7 @@ private:
                  Eigen::MatrixXd &out){
     out = (x.array() == 0).select(y, x);
   }
+
 
 };
 
