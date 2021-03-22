@@ -49,7 +49,7 @@ struct RawSVD_DNE {
         if(params.check_loss){
            double loss_now = loss(W,B);
            std::cout << "loss: " << loss_now << std::endl;
-           if(loss_now > loss_){
+           if(loss_ != 0 and loss_now > loss_){
              std::cout << "loss increased !!!!" << std::endl;
            }
 

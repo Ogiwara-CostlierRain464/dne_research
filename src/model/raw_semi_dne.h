@@ -118,8 +118,8 @@ private:
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo
       + params.mu * (B_Bt * B)
-      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N))
-      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+//      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
@@ -160,8 +160,8 @@ private:
     return - 0.5 * (B * S * B.transpose()).trace()
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
-           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace()
-           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
+           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
+//           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,
