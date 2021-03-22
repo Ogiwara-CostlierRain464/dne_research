@@ -36,6 +36,7 @@ struct RawSemiDNE {
 
       report("Init method: " +
       std::string(FLAGS_semi_svd ? "RandSVD" : "Random"));
+      report("o: " + std::to_string(FLAGS_o));
 
       if(FLAGS_semi_svd){
         Eigen::MatrixXd SC = S;
