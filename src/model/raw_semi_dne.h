@@ -40,6 +40,7 @@ struct RawSemiDNE {
       if(FLAGS_semi_svd){
         Eigen::MatrixXd SC = S;
         auto svd = RandomizedSvd(SC, params.m);
+        W = Eigen::MatrixXd::Random(params.m, C);
         B = svd.matrixV().transpose();
         eq13(B, W);
       }else{
