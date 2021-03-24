@@ -17,6 +17,7 @@ struct RawSemiDNE {
   typedef Eigen::SparseMatrix<double, 0, std::ptrdiff_t> Sp;
 
   Sp const &S;
+  Sp const &L;
   TrainLabel  const &T;
   size_t const C;
   Params const params;
@@ -27,13 +28,26 @@ struct RawSemiDNE {
     TrainLabel const &T_,
     size_t const C_,
     Params const params_):
-    S(S_), T(T_), C(C_), params(params_){
+    S(S_),L(L_), T(T_), C(C_), params(params_){
   }
 
   void fit(Eigen::MatrixXd &W, Eigen::MatrixXd &B){
     srand(params.seed);
-    W = Eigen::MatrixXd::Random(params.m, C);
-    B = Eigen::MatrixXd::Random(params.m, S.rows());
+
+    report("o: " + std::to_string(FLAGS_o));
+
+    if(FLAGS_semi_svd){
+      report("Init method: RandSVD");
+      Eigen::MatrixXd SC = S;
+      auto svd = RandomizedSvd(SC, params.m);
+      W = Eigen::MatrixXd::Random(params.m, C);
+      B = svd.matrixV().transpose();
+      eq13(B, W);
+    }else{
+      report("Init method: Random www");
+      W = Eigen::MatrixXd::Random(params.m, C);
+      B = Eigen::MatrixXd::Random(params.m, S.rows());
+    }
 
     double loss_ = 0;
     for(size_t out = 1; out <= params.T_out; ++out){
