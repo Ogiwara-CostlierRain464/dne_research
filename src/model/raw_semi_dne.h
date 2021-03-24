@@ -44,7 +44,7 @@ struct RawSemiDNE {
       B = svd.matrixV().transpose();
       eq13(B, W);
     }else{
-      report("Init method: Random");
+      report("Init method: Random www");
       W = Eigen::MatrixXd::Random(params.m, C);
       B = Eigen::MatrixXd::Random(params.m, S.rows());
     }
@@ -94,19 +94,21 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd B_Bt;
-    if(B.coeff(1,1) == 1 or B.coeff(1,1) == -1){
-      binary_mult512_self(B,B_Bt);
-    }else{
-      B_Bt = B * B.transpose();
-    }
+//    if(B.coeff(1,1) == 1 or B.coeff(1,1) == -1){
+//      binary_mult512_self(B,B_Bt);
+//    }else{
+//      B_Bt = B * B.transpose();
+//    }
+
+    B_Bt = B * B.transpose();
 
     Eigen::MatrixXd J = Eigen::MatrixXd::Identity(N, C);
 
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo;
       + params.mu * (B_Bt * B)
-      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N))
-      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+//      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
@@ -147,8 +149,8 @@ private:
     return - 0.5 * (B * S * B.transpose()).trace()
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
-           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace()
-           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
+           + params.rho * 0.5 * (B * Eigen::VectorXd::Zero(N)).trace();
+//           + FLAGS_o * (L * (W.transpose() * B).transpose() * (W.transpose() * B)).trace();
   }
 
   static void sgn(Eigen::MatrixXd const &x,
