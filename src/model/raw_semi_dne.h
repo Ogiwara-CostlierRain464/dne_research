@@ -52,18 +52,8 @@ struct RawSemiDNE {
     for(size_t out = 1; out <= params.T_out; ++out){
       std::cout << "out: " << out << std::endl;
 
-      double loss2 = 0;
       for(size_t in = 1; in <= params.T_in; ++in){
         eq11(W, B);
-
-        if(params.check_loss){
-          double loss_now = loss(W,B);
-          std::cout << "T_in: " << in << " loss: " << loss_now << std::endl;
-          if(loss2 != 0 and loss_now > loss2){
-            std::cout <<  "T_in: " << in << " loss increased !!!!" << std::endl;
-          }
-          loss2 = loss_now;
-        }
       }
       eq13(B,W);
 
@@ -107,9 +97,9 @@ private:
     B_Bt = B * B.transpose();
 
     Eigen::MatrixXd dLB = -B * S
-                          + params.lambda * wo
-                          + params.mu * (B_Bt * B)
-                          + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + params.lambda * wo
+      + params.mu * (B_Bt * B)
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);

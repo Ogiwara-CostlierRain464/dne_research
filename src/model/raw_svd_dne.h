@@ -86,7 +86,7 @@ private:
     B_Bt = B * B.transpose();
 
     Eigen::MatrixXd dLB = -B * S
-      + params.lambda * wo;
+      + params.lambda * wo
       + params.mu * (B_Bt * B)
       + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
 
