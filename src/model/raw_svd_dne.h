@@ -126,6 +126,7 @@ private:
     WO(W, wo);
     auto N = S.rows();
 
+    //
     return - 0.5 * (B * S * B.transpose()).trace()
            + params.lambda * (wo.transpose() * B).trace()
            + params.mu * 0.25 * (B * B.transpose()).trace()
