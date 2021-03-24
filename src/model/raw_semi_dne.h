@@ -103,14 +103,8 @@ private:
     Eigen::MatrixXd wo;
     WO(W, wo);
     Eigen::MatrixXd B_Bt;
-    if(B.coeff(1,1) == 1 or B.coeff(1,1) == -1){
-      binary_mult512_self(B,B_Bt);
-    }else{
-      static bool only_once = false;
-      assert(!only_once);
-      B_Bt = B * B.transpose();
-      only_once = true;
-    }
+
+    B_Bt = B * B.transpose();
 
     Eigen::MatrixXd dLB = -B * S
                           + params.lambda * wo
