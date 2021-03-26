@@ -8,9 +8,7 @@
 #include "params.h"
 #include "../binary.h"
 
-DEFINE_bool(semi_svd, false, "Use Randomized SVD to init");
 DEFINE_double(o, 1.0, "omicron");
-
 
 struct RawSemiDNE {
   typedef std::unordered_map<size_t, size_t> TrainLabel;
@@ -36,17 +34,9 @@ struct RawSemiDNE {
 
     report("o: " + std::to_string(FLAGS_o));
 
-    report("Init method: RandSVD");
-    Eigen::MatrixXd SC = S;
-    auto svd = RandomizedSvd(SC, params.m);
+    report("Init method: Random");
     W = Eigen::MatrixXd::Random(params.m, C);
-    B = svd.matrixV().transpose();
-    eq13(B, W);
-
-//    report("Init method: Random www");
-//    W = Eigen::MatrixXd::Random(params.m, C);
-//    B = Eigen::MatrixXd::Random(params.m, S.rows());
-//
+    B = Eigen::MatrixXd::Random(params.m, S.rows());
 
     double loss_ = 0;
     for(size_t out = 1; out <= params.T_out; ++out){
