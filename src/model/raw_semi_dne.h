@@ -86,10 +86,13 @@ private:
 
     B_Bt = B * B.transpose();
 
+    Eigen::MatrixXd J = Eigen::MatrixXd::Identity(N, C);
+
     Eigen::MatrixXd dLB = -B * S
       + params.lambda * wo
       + params.mu * (B_Bt * B)
-      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N));
+      + params.rho * (B * Eigen::VectorXd::Ones(N) * Eigen::RowVectorXd::Ones(N))
+      + FLAGS_o * (B * J * W.transpose() * B * L.transpose() + B * J * W.transpose() * B * L);
 
     Eigen::MatrixXd cf;
     CF(params.tau * B - dLB, B, cf);
